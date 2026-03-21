@@ -2,6 +2,7 @@
 import { NextResponse } from "next/server";
 import { saveInboundCallToDB } from "@/lib/db";
 import { transcriptSummary } from "@/lib/transcript_summary";
+import { Retell } from "retell-sdk";
 
 export interface MyCallData {
   call_id: string;
@@ -29,8 +30,14 @@ export interface MyCallData {
 export async function POST(req: Request) {
   try {
     const rawBody = await req.text();
-    const call = JSON.parse(rawBody)
-    console.log(call)
+        
+    const signature = req.headers.get("x-retell-signature"); 
+    const apiKey = process.env.RETELL_API_KEY; 
+    if (!signature || !apiKey || !Retell.verify(rawBody, apiKey, signature)) { 
+      return NextResponse.json({ error: "Invalid signature" }, { status: 401 }); 
+    }
+
+    const call = JSON.parse(rawBody);
     if (call?.call_id) {
       const { notes, severity } = (await transcriptSummary(call.transcript))!;
       await saveInboundCallToDB({
