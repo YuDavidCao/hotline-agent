@@ -54,3 +54,20 @@ model VerificationToken {
 
   @@unique([identifier, token])
 }
+
+model InboundCall { 
+  callId  String  @id @default(cuid())
+  agentID String 
+  agentVersion String 
+  agentName String 
+  retellVariables Json 
+  startTime Int 
+  endTime Int 
+  duration Int 
+  transcript Json 
+  recordingURL String
+  disconnectionReason String 
+  fromNumber String 
+  toNumber String
+  direction String 
+}
