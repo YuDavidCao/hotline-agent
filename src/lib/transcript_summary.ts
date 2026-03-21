@@ -15,22 +15,23 @@ function serializeTranscript(transcript: Transcript[]) {
 export async function transcriptSummary(
   transcript: Transcript[]
 ) {
-  const serializedTranscript = serializeTranscript(transcript);
+  try {
+    const serializedTranscript = serializeTranscript(transcript);
 
-  const { output } = await generateText({
-    model: 'openai/gpt-4o-mini',
-    output: Output.object({
-      schema: z.object({
-        notes: z.array(
-          z.object({
-            note: z.string(), reason: z.string(
-            )
-          }),
-        ),
-        severity: z.number().int().min(1).max(10),
+    const { output } = await generateText({
+      model: 'openai/gpt-4o-mini',
+      output: Output.object({
+        schema: z.object({
+          notes: z.array(
+            z.object({
+              note: z.string().min(1).max(100),
+              reason: z.string().min(1).max(100),
+            }),
+          ),
+          severity: z.number().int().min(1).max(10),
+        }),
       }),
-    }),
-    prompt: `
+      prompt: `
 You are analyzing a call transcript between a user and a suicide hotline agent.
 
 Task:
@@ -42,13 +43,17 @@ Task:
 
 Output requirements:
 - Return structured output with:
-  - notes: array of objects with { note, reason }
+  - notes: array of objects with { note: string, reason: string }
   - severity: a number from 1 to 10
 
 Transcript:
 ${serializedTranscript}
 `.trim(),
-  });
+    });
 
-  return output
+    return output
+  } catch (error) {
+    console.error('Error generating transcript summary', error);
+    return null;
+  }
 }
