@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+import { useRouter } from "next/navigation"
 import { cn } from "@/lib/utils"
 import { InputBase } from "@/components/ui/input"
 import {
@@ -116,6 +117,7 @@ function NotesCell({ notes }: { notes: Note[] }) {
 }
 
 function ActionsCell({ call }: { call: CallRow }) {
+  const router = useRouter()
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -142,9 +144,7 @@ function ActionsCell({ call }: { call: CallRow }) {
       <DropdownMenuContent align="end" className="min-w-[160px]">
         <DropdownMenuItem
           className="cursor-pointer"
-          onClick={() => {
-            // placeholder: view call
-          }}
+          onClick={() => router.push(`/dashboard/calls/${call.id}`)}
         >
           View call
         </DropdownMenuItem>
