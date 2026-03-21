@@ -6,7 +6,7 @@ export default function Home() {
     <main className="min-h-screen flex flex-col">
       <div className="flex-1 flex flex-col items-center justify-center px-6 py-16 sm:py-24">
         <div className="max-w-lg w-full text-center">
-          <p className="text-primary font-semibold tracking-[0.2em] text-xs uppercase mb-4">
+          <p className="text-link font-semibold tracking-[0.2em] text-xs uppercase mb-4">
             Human–LLM phone analysis
           </p>
           <h1 className="text-3xl sm:text-4xl font-semibold text-foreground tracking-tight text-balance">

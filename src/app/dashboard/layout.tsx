@@ -16,10 +16,10 @@ export default async function DashboardLayout({
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <header className="bg-card border-b border-border shadow-sm">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between gap-4">
+        <div className="mx-auto flex w-full max-w-[min(100rem,calc(100vw-1.5rem))] items-center justify-between gap-4 px-3 py-4 sm:px-5 lg:px-6">
           <div className="flex items-center gap-3 min-w-0">
             <span
-              className="hidden sm:flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-muted text-primary border border-border"
+              className="hidden sm:flex h-9 w-9 shrink-0 items-center justify-center rounded-sm bg-muted text-link border border-border"
               aria-hidden
             >
               <svg
@@ -53,8 +53,10 @@ export default async function DashboardLayout({
           </div>
         </div>
       </header>
-      <main className="flex-1 p-4 sm:p-6 lg:p-8">
-        <div className="max-w-5xl mx-auto">{children}</div>
+      <main className="flex-1 px-3 py-4 sm:px-5 sm:py-6 lg:px-6 lg:py-8">
+        <div className="mx-auto w-full max-w-[min(100rem,calc(100vw-1.5rem))]">
+          {children}
+        </div>
       </main>
     </div>
   )

@@ -2,10 +2,14 @@ import type { Metadata } from "next"
 import localFont from "next/font/local"
 import "./globals.css"
 import { AuthSessionProvider } from "@/components/providers/session-provider"
-import { Figtree } from "next/font/google"
+import { Plus_Jakarta_Sans } from "next/font/google"
 import { cn } from "@/lib/utils"
 
-const figtree = Figtree({ subsets: ["latin"], variable: "--font-sans" })
+const plusJakarta = Plus_Jakarta_Sans({
+  subsets: ["latin"],
+  variable: "--font-sans",
+  weight: ["500", "600", "700"],
+})
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -33,8 +37,11 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en" className={cn("dark", figtree.variable, geistSans.variable, geistMono.variable)}>
-      <body className="min-h-screen bg-background font-sans text-foreground antialiased">
+    <html
+      lang="en"
+      className={cn("dark", plusJakarta.variable, geistSans.variable, geistMono.variable)}
+    >
+      <body className="min-h-screen bg-background font-sans text-foreground antialiased font-medium">
         <AuthSessionProvider>{children}</AuthSessionProvider>
       </body>
     </html>

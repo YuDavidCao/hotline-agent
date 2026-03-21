@@ -11,10 +11,10 @@ export const metadata: Metadata = {
 export default function RegisterPage() {
   return (
     <main className="min-h-screen flex flex-col items-center justify-center p-4 sm:p-8 bg-gradient-to-b from-background via-background to-muted/30">
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_85%_50%_at_50%_-15%,oklch(0.52_0.2_25_/_0.12),transparent)] pointer-events-none" />
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_85%_50%_at_50%_-15%,rgb(88_166_255_/_0.14),transparent)] pointer-events-none" />
       <div className="relative w-full max-w-md">
         <div className="text-center mb-8">
-          <p className="text-primary font-semibold tracking-[0.2em] text-xs uppercase mb-3">
+          <p className="text-link font-semibold tracking-[0.2em] text-xs uppercase mb-3">
             Human–LLM phone analysis
           </p>
           <h1 className="text-2xl sm:text-[1.75rem] font-semibold text-foreground tracking-tight">

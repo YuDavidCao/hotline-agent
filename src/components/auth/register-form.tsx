@@ -128,7 +128,7 @@ export function RegisterForm() {
         <p
           role="alert"
           aria-live="polite"
-          className="text-sm text-destructive-foreground bg-destructive/15 border border-destructive/40 rounded-lg px-3 py-2"
+          className="text-sm font-medium text-destructive-foreground bg-destructive/15 border border-destructive/40 rounded-sm px-3 py-2"
         >
           {error}
         </p>
@@ -142,7 +142,7 @@ export function RegisterForm() {
         Already have an account?{" "}
         <Link
           href="/login"
-          className="text-primary font-medium hover:underline underline-offset-4"
+          className="text-link font-medium hover:text-link-hover hover:underline underline-offset-4"
         >
           Sign in
         </Link>

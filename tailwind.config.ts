@@ -14,10 +14,15 @@ const config: Config = {
         mono: ["var(--font-geist-mono)", "ui-monospace", "monospace"],
       },
       borderRadius: {
+        none: "0",
+        sm: "var(--radius)",
+        DEFAULT: "var(--radius)",
+        md: "var(--radius)",
         lg: "var(--radius)",
-        md: "calc(var(--radius) - 2px)",
-        sm: "calc(var(--radius) - 4px)",
-        xl: "calc(var(--radius) + 4px)",
+        xl: "calc(var(--radius) + 2px)",
+        "2xl": "calc(var(--radius) + 4px)",
+        "3xl": "calc(var(--radius) + 6px)",
+        "4xl": "calc(var(--radius) + 8px)",
       },
       colors: {
         background: "var(--background)",
@@ -53,6 +58,10 @@ const config: Config = {
         border: "var(--border)",
         input: "var(--input)",
         ring: "var(--ring)",
+        link: {
+          DEFAULT: "var(--link)",
+          hover: "var(--link-hover)",
+        },
         chart: {
           1: "var(--chart-1)",
           2: "var(--chart-2)",

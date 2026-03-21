@@ -4,94 +4,141 @@
 @tailwind components;
 @tailwind utilities;
 
+/*
+  Dark / cyan theme:
+  Background #0D1117 · Surface #161B22 · Gridlines #30363D
+  Primary text #E6EDF3 · Secondary text #8B949E
+  Accent #58A6FF · Accent secondary #2EA043
+*/
 @layer utilities {
   .text-balance {
     text-wrap: balance;
   }
 }
 
-/* Default: dark black canvas, grey surfaces, red accents (shadcn tokens) */
 @layer base {
   .theme {
     --font-heading: var(--font-sans);
     --font-sans: var(--font-sans);
   }
   :root {
-    --background: oklch(0.06 0 0);
-    --foreground: oklch(0.9 0 0);
-    --card: oklch(0.1 0 0);
-    --card-foreground: oklch(0.93 0 0);
-    --popover: oklch(0.1 0 0);
-    --popover-foreground: oklch(0.93 0 0);
-    --primary: oklch(0.52 0.2 25);
-    --primary-foreground: oklch(0.98 0 0);
-    --secondary: oklch(0.16 0 0);
-    --secondary-foreground: oklch(0.88 0 0);
-    --muted: oklch(0.14 0 0);
-    --muted-foreground: oklch(0.55 0 0);
-    --accent: oklch(0.18 0.02 25);
-    --accent-foreground: oklch(0.92 0 0);
-    --destructive: oklch(0.5 0.2 27);
-    --destructive-foreground: oklch(0.98 0 0);
-    --border: oklch(0.22 0 0);
-    --input: oklch(0.17 0 0);
-    --ring: oklch(0.52 0.18 25);
-    --chart-1: oklch(0.52 0.2 25);
-    --chart-2: oklch(0.45 0 0);
-    --chart-3: oklch(0.35 0 0);
-    --chart-4: oklch(0.28 0 0);
-    --chart-5: oklch(0.22 0 0);
-    --radius: 0.625rem;
-    --sidebar: oklch(0.08 0 0);
-    --sidebar-foreground: oklch(0.9 0 0);
-    --sidebar-primary: oklch(0.52 0.2 25);
-    --sidebar-primary-foreground: oklch(0.98 0 0);
-    --sidebar-accent: oklch(0.15 0 0);
-    --sidebar-accent-foreground: oklch(0.9 0 0);
-    --sidebar-border: oklch(0.22 0 0);
-    --sidebar-ring: oklch(0.52 0.18 25);
+    --background: #0d1117;
+    --foreground: #e6edf3;
+    --card: #161b22;
+    --card-foreground: #e6edf3;
+    --popover: #161b22;
+    --popover-foreground: #e6edf3;
+    --primary: #58a6ff;
+    --primary-foreground: #0d1117;
+    --secondary: #2ea043;
+    --secondary-foreground: #e6edf3;
+    --muted: #21262d;
+    --muted-foreground: #8b949e;
+    --accent: color-mix(in srgb, #58a6ff 18%, #161b22);
+    --accent-foreground: #e6edf3;
+    --destructive: #f85149;
+    --destructive-foreground: #e6edf3;
+    --border: #30363d;
+    --input: #0d1117;
+    --ring: #58a6ff;
+    --chart-1: #58a6ff;
+    --chart-2: #2ea043;
+    --chart-3: #8b949e;
+    --chart-4: #388bfd;
+    --chart-5: #21262d;
+    --radius: 0.125rem;
+    --sidebar: #161b22;
+    --sidebar-foreground: #e6edf3;
+    --sidebar-primary: #58a6ff;
+    --sidebar-primary-foreground: #0d1117;
+    --sidebar-accent: #21262d;
+    --sidebar-accent-foreground: #8b949e;
+    --sidebar-border: #30363d;
+    --sidebar-ring: #58a6ff;
+    --link: #58a6ff;
+    --link-hover: #79c0ff;
   }
   .dark {
-    --background: oklch(0.06 0 0);
-    --foreground: oklch(0.9 0 0);
-    --card: oklch(0.1 0 0);
-    --card-foreground: oklch(0.93 0 0);
-    --popover: oklch(0.1 0 0);
-    --popover-foreground: oklch(0.93 0 0);
-    --primary: oklch(0.52 0.2 25);
-    --primary-foreground: oklch(0.98 0 0);
-    --secondary: oklch(0.16 0 0);
-    --secondary-foreground: oklch(0.88 0 0);
-    --muted: oklch(0.14 0 0);
-    --muted-foreground: oklch(0.55 0 0);
-    --accent: oklch(0.18 0.02 25);
-    --accent-foreground: oklch(0.92 0 0);
-    --destructive: oklch(0.5 0.2 27);
-    --destructive-foreground: oklch(0.98 0 0);
-    --border: oklch(0.22 0 0);
-    --input: oklch(0.17 0 0);
-    --ring: oklch(0.52 0.18 25);
-    --chart-1: oklch(0.52 0.2 25);
-    --chart-2: oklch(0.45 0 0);
-    --chart-3: oklch(0.35 0 0);
-    --chart-4: oklch(0.28 0 0);
-    --chart-5: oklch(0.22 0 0);
-    --sidebar: oklch(0.08 0 0);
-    --sidebar-foreground: oklch(0.9 0 0);
-    --sidebar-primary: oklch(0.52 0.2 25);
-    --sidebar-primary-foreground: oklch(0.98 0 0);
-    --sidebar-accent: oklch(0.15 0 0);
-    --sidebar-accent-foreground: oklch(0.9 0 0);
-    --sidebar-border: oklch(0.22 0 0);
-    --sidebar-ring: oklch(0.52 0.18 25);
+    --background: #0d1117;
+    --foreground: #e6edf3;
+    --card: #161b22;
+    --card-foreground: #e6edf3;
+    --popover: #161b22;
+    --popover-foreground: #e6edf3;
+    --primary: #58a6ff;
+    --primary-foreground: #0d1117;
+    --secondary: #2ea043;
+    --secondary-foreground: #e6edf3;
+    --muted: #21262d;
+    --muted-foreground: #8b949e;
+    --accent: color-mix(in srgb, #58a6ff 18%, #161b22);
+    --accent-foreground: #e6edf3;
+    --destructive: #f85149;
+    --destructive-foreground: #e6edf3;
+    --border: #30363d;
+    --input: #0d1117;
+    --ring: #58a6ff;
+    --chart-1: #58a6ff;
+    --chart-2: #2ea043;
+    --chart-3: #8b949e;
+    --chart-4: #388bfd;
+    --chart-5: #21262d;
+    --sidebar: #161b22;
+    --sidebar-foreground: #e6edf3;
+    --sidebar-primary: #58a6ff;
+    --sidebar-primary-foreground: #0d1117;
+    --sidebar-accent: #21262d;
+    --sidebar-accent-foreground: #8b949e;
+    --sidebar-border: #30363d;
+    --sidebar-ring: #58a6ff;
+    --link: #58a6ff;
+    --link-hover: #79c0ff;
   }
   * {
     @apply border-border;
   }
   body {
-    @apply bg-background text-foreground antialiased;
+    @apply bg-background text-foreground antialiased font-medium;
+    font-feature-settings: "kern" 1, "liga" 1;
   }
   html {
     @apply font-sans;
+  }
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    @apply font-semibold tracking-tight text-foreground;
+  }
+
+  /*
+    Chrome / Edge autofill overrides default input styling (yellow background).
+    Force our input colors so login fields stay consistent when autofilled.
+  */
+  [data-slot="input"]:-webkit-autofill,
+  [data-slot="input"]:-webkit-autofill:hover,
+  [data-slot="input"]:-webkit-autofill:active {
+    -webkit-text-fill-color: var(--foreground) !important;
+    caret-color: var(--foreground);
+    -webkit-box-shadow: 0 0 0 1000px var(--input) inset !important;
+    box-shadow: 0 0 0 1000px var(--input) inset !important;
+    border-color: var(--border);
+    transition: background-color 99999s ease-out 0s;
+  }
+
+  /* Keep focus ring visible when field is both autofilled and focused */
+  [data-slot="input"]:-webkit-autofill:focus,
+  [data-slot="input"]:-webkit-autofill:focus-visible {
+    -webkit-text-fill-color: var(--foreground) !important;
+    caret-color: var(--foreground);
+    -webkit-box-shadow:
+      0 0 0 1000px var(--input) inset,
+      0 0 0 3px color-mix(in srgb, var(--ring) 55%, transparent) !important;
+    box-shadow:
+      0 0 0 1000px var(--input) inset,
+      0 0 0 3px color-mix(in srgb, var(--ring) 55%, transparent) !important;
+    border-color: var(--ring);
   }
 }
