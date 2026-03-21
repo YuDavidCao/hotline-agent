@@ -101,13 +101,6 @@ function useAudioAnalysis(
   return { analysis, loading, error }
 }
 
-function captionAtTime(captions: TimedCaption[], time: number): TimedCaption | null {
-  for (const cap of captions) {
-    if (time >= cap.start && time < cap.end) return cap
-  }
-  return null
-}
-
 function AudioPlayer({
   src,
   transcript,
@@ -132,22 +125,44 @@ function AudioPlayer({
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [analysis])
 
+  // Use requestAnimationFrame for smooth ~60fps waveform updates,
+  // but throttle parent callback to ~20fps to limit transcript re-renders
   React.useEffect(() => {
     const audio = audioRef.current
     if (!audio) return
-    const onTime = () => {
-      setCurrentTime(audio.currentTime)
-      if (analysis) {
-        onTimeUpdate?.(audio.currentTime, analysis.captions)
+
+    let rafId: number | null = null
+    let lastParentUpdate = 0
+    const PARENT_INTERVAL = 50
+
+    const tick = () => {
+      if (audio.paused) return
+      const t = audio.currentTime
+      setCurrentTime(t)
+      const now = performance.now()
+      if (analysis && now - lastParentUpdate >= PARENT_INTERVAL) {
+        lastParentUpdate = now
+        onTimeUpdate?.(t, analysis.captions)
       }
+      rafId = requestAnimationFrame(tick)
     }
+
+    const onPlay = () => { rafId = requestAnimationFrame(tick) }
+    const onPause = () => { if (rafId !== null) cancelAnimationFrame(rafId) }
     const onMeta = () => setDuration(audio.duration)
     const onEnded = () => setPlaying(false)
-    audio.addEventListener("timeupdate", onTime)
+
+    audio.addEventListener("play", onPlay)
+    audio.addEventListener("pause", onPause)
     audio.addEventListener("loadedmetadata", onMeta)
     audio.addEventListener("ended", onEnded)
+
+    if (!audio.paused) onPlay()
+
     return () => {
-      audio.removeEventListener("timeupdate", onTime)
+      if (rafId !== null) cancelAnimationFrame(rafId)
+      audio.removeEventListener("play", onPlay)
+      audio.removeEventListener("pause", onPause)
       audio.removeEventListener("loadedmetadata", onMeta)
       audio.removeEventListener("ended", onEnded)
     }
@@ -179,17 +194,6 @@ function AudioPlayer({
   }
 
   const progress = duration > 0 ? (currentTime / duration) * 100 : 0
-  const activeCaption = analysis ? captionAtTime(analysis.captions, currentTime) : null
-
-  const visibleCaptions = React.useMemo(() => {
-    if (!analysis) return []
-    return analysis.captions.filter((cap) => cap.start <= currentTime)
-  }, [analysis, currentTime])
-
-  const captionEndRef = React.useRef<HTMLDivElement>(null)
-  React.useEffect(() => {
-    captionEndRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" })
-  }, [visibleCaptions.length])
 
   return (
     <Card className="overflow-hidden p-0">
@@ -264,53 +268,6 @@ function AudioPlayer({
             </div>
           </div>
         </div>
-
-        {/* Accumulating captions */}
-        {analysis && (
-          <div className="max-h-40 min-h-[2.5rem] overflow-y-auto rounded-md border border-border bg-muted/30 px-3 py-2">
-            {visibleCaptions.length > 0 ? (
-              <div className="space-y-1">
-                {visibleCaptions.map((cap, i) => {
-                  const isActive = activeCaption === cap
-                  const showLabel =
-                    i === 0 || visibleCaptions[i - 1].turnRole !== cap.turnRole
-                  return (
-                    <div key={i}>
-                      {showLabel && (
-                        <p
-                          className={cn(
-                            "text-[10px] font-semibold uppercase tracking-wider",
-                            i > 0 && "mt-2",
-                            cap.turnRole === "agent"
-                              ? "text-secondary/60"
-                              : "text-destructive/60"
-                          )}
-                        >
-                          {cap.turnRole === "agent" ? "Agent" : "Caller"}
-                        </p>
-                      )}
-                      <p
-                        className={cn(
-                          "text-sm leading-snug transition-opacity duration-200",
-                          isActive
-                            ? "font-medium text-foreground"
-                            : "text-muted-foreground"
-                        )}
-                      >
-                        {cap.text}
-                      </p>
-                    </div>
-                  )
-                })}
-                <div ref={captionEndRef} />
-              </div>
-            ) : (
-              <p className="text-center text-xs text-muted-foreground opacity-50">
-                {playing ? "…" : "Press play to hear recording"}
-              </p>
-            )}
-          </div>
-        )}
       </div>
     </Card>
   )

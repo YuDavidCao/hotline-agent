@@ -167,6 +167,8 @@ export function CallTranscriptView({
               negation={negation}
               activeTurnIndex={activeTurn}
               turnRefs={turnRefs}
+              currentTime={currentTime}
+              captions={captions}
             />
           </div>
         </ScrollArea>
