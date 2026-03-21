@@ -9,6 +9,7 @@ import {
   type DashboardCallEntry,
 } from "@/lib/dashboard-mock"
 import type { HighRiskPhrase, NegationPhrase } from "@/lib/risk-annotations"
+import type { TimedCaption } from "@/lib/word-alignment"
 import { AnnotatedTranscriptTurns } from "./annotated-transcript"
 
 function formatMetaRange(entry: DashboardCallEntry) {
@@ -24,17 +25,48 @@ function formatMetaRange(entry: DashboardCallEntry) {
   return `${fmt(start)} → ${fmt(end)}`
 }
 
+function activeTurnFromCaptions(
+  currentTime: number | undefined,
+  captions: TimedCaption[],
+): number | undefined {
+  if (currentTime === undefined || captions.length === 0) return undefined
+  for (const cap of captions) {
+    if (currentTime >= cap.start && currentTime < cap.end) {
+      return cap.turnIndex
+    }
+  }
+  return undefined
+}
+
 export function CallTranscriptView({
   entry,
   risk,
   negation,
   onBack,
+  currentTime,
+  captions,
+  audioSlot,
 }: {
   entry: DashboardCallEntry
   risk: HighRiskPhrase[]
   negation: NegationPhrase[]
   onBack: () => void
+  currentTime?: number
+  captions?: TimedCaption[]
+  audioSlot?: React.ReactNode
 }) {
+  const turnRefs = React.useRef<(HTMLLIElement | null)[]>([])
+  const activeTurn = activeTurnFromCaptions(currentTime, captions ?? [])
+
+  // Auto-scroll to the active turn
+  React.useEffect(() => {
+    if (activeTurn === undefined) return
+    const el = turnRefs.current[activeTurn]
+    if (el) {
+      el.scrollIntoView({ behavior: "smooth", block: "nearest" })
+    }
+  }, [activeTurn])
+
   return (
     <div className="flex flex-col gap-6">
       {/* Header with back button */}
@@ -62,11 +94,8 @@ export function CallTranscriptView({
         </Button>
         <div className="min-w-0">
           <h2 className="text-lg font-semibold text-foreground">
-            {entry.agentName}
-          </h2>
-          <p className="mt-0.5 text-sm text-muted-foreground">
             {entry.callId}
-          </p>
+          </h2>
         </div>
       </div>
 
@@ -96,8 +125,8 @@ export function CallTranscriptView({
           </span>
         </div>
         <dl className="grid gap-2 text-sm sm:grid-cols-[minmax(0,7rem)_1fr] sm:gap-x-3">
-          <dt className="text-muted-foreground">Agent</dt>
-          <dd className="font-medium">{entry.agentName}</dd>
+          <dt className="text-muted-foreground">Agent ID</dt>
+          <dd className="font-mono text-xs break-all">{entry.agentId}</dd>
           <dt className="text-muted-foreground">From / To</dt>
           <dd className="font-mono">{entry.fromNumber} → {entry.toNumber}</dd>
           <dt className="text-muted-foreground">Window</dt>
@@ -106,6 +135,8 @@ export function CallTranscriptView({
           <dd className="capitalize">{entry.callStatus}</dd>
         </dl>
       </div>
+
+      {audioSlot}
 
       {/* Annotated transcript turns */}
       <div className="rounded-md border border-border bg-card">
@@ -131,6 +162,10 @@ export function CallTranscriptView({
               turns={entry.transcriptObject}
               risk={risk}
               negation={negation}
+              activeTurnIndex={activeTurn}
+              turnRefs={turnRefs}
+              currentTime={currentTime}
+              captions={captions}
             />
           </div>
         </ScrollArea>

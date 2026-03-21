@@ -1,4 +1,4 @@
-import { MyCallData } from "@/app/api/retell/route";
+import type { MyCallData } from "@/lib/inbound-call-types";
 import { Prisma, PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
@@ -12,13 +12,15 @@ export async function saveInboundCallToDB(callData: MyCallData) {
       update: {
         agentId: prismaData.agentId,
         agentVersion: prismaData.agentVersion,
-        agentName: prismaData.agentName,
         retellVariables: prismaData.retellVariables,
         startTime: prismaData.startTime,
         endTime: prismaData.endTime,
         duration: prismaData.duration,
         transcript: prismaData.transcript,
-        recordingURL: prismaData.recordingURL,
+        // Transcription payload has no recording; keep URL set earlier by post_call_audio.
+        ...(callData.recording_url
+          ? { recordingURL: prismaData.recordingURL }
+          : {}),
         disconnectionReason: prismaData.disconnectionReason,
         fromNumber: prismaData.fromNumber,
         toNumber: prismaData.toNumber,
@@ -29,12 +31,23 @@ export async function saveInboundCallToDB(callData: MyCallData) {
       create: prismaData,
     });
 
-    console.log("Saved inbound call to DB:", call.callId);
     return call;
   } catch (error) {
     console.error("Error saving inbound call to DB:", error);
     throw error;
   }
+}
+
+/** Sets recording URL when post_call_audio arrives (may run before or after transcription). */
+export async function updateInboundCallRecordingUrl(
+  callId: string,
+  recordingUrl: string,
+): Promise<{ updated: boolean }> {
+  const result = await prisma.inboundCall.updateMany({
+    where: { callId },
+    data: { recordingURL: recordingUrl },
+  });
+  return { updated: result.count > 0 };
 }
 
 function toJsonInput(value: unknown): Prisma.InputJsonValue {
@@ -48,7 +61,6 @@ function mapCallDataToPrisma(
     callId: callData.call_id,
     agentId: callData.agent_id,
     agentVersion: callData.agent_version,
-    agentName: callData.agent_name,
     retellVariables: toJsonInput(callData.retell_llm_dynamic_variables),
     startTime: BigInt(callData.start_timestamp),
     endTime: BigInt(callData.end_timestamp),

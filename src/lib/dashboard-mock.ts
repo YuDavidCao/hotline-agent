@@ -1,5 +1,5 @@
 /**
- * Shapes mirror Retell webhook `call` payloads (see `src/app/api/retell/route.ts` comments).
+ * Shapes mirror voice webhook payloads (see `src/lib/inbound-call-types.ts` and `src/app/api/elevenlabs/route.ts`).
  * Replace with Prisma/API data when wired.
  */
 
@@ -24,7 +24,7 @@ export type DashboardCallEntry = {
   endTimestamp: number
   durationMs: number
   direction: "inbound" | "outbound"
-  agentName: string
+  agentId: string
   fromNumber: string
   toNumber: string
   callStatus: string

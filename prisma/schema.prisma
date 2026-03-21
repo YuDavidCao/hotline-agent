@@ -60,7 +60,6 @@ model InboundCall {
   callId  String  @unique
   agentId String 
   agentVersion Int 
-  agentName String 
   retellVariables Json 
   startTime BigInt 
   endTime BigInt 

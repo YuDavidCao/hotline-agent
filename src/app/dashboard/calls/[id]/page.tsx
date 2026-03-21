@@ -12,7 +12,6 @@ export default async function CallPage({ params }: { params: { id: string } }) {
     callId: raw.callId,
     agentId: raw.agentId,
     agentVersion: raw.agentVersion,
-    agentName: raw.agentName,
     retellVariables: raw.retellVariables as Record<string, unknown>,
     startTime: Number(raw.startTime),
     endTime: Number(raw.endTime),
