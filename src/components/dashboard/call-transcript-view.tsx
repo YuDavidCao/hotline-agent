@@ -62,11 +62,8 @@ export function CallTranscriptView({
         </Button>
         <div className="min-w-0">
           <h2 className="text-lg font-semibold text-foreground">
-            {entry.agentName}
-          </h2>
-          <p className="mt-0.5 text-sm text-muted-foreground">
             {entry.callId}
-          </p>
+          </h2>
         </div>
       </div>
 
@@ -96,8 +93,8 @@ export function CallTranscriptView({
           </span>
         </div>
         <dl className="grid gap-2 text-sm sm:grid-cols-[minmax(0,7rem)_1fr] sm:gap-x-3">
-          <dt className="text-muted-foreground">Agent</dt>
-          <dd className="font-medium">{entry.agentName}</dd>
+          <dt className="text-muted-foreground">Agent ID</dt>
+          <dd className="font-mono text-xs break-all">{entry.agentId}</dd>
           <dt className="text-muted-foreground">From / To</dt>
           <dd className="font-mono">{entry.fromNumber} → {entry.toNumber}</dd>
           <dt className="text-muted-foreground">Window</dt>

@@ -38,3 +38,9 @@ next-env.d.ts
 /src/generated/prisma
 
 .env
+
+# Local webhook archives (may contain PII)
+data/elevenlabs-webhooks/*.json
+
+# Local call recordings from post_call_audio (large / may contain PII)
+public/elevenlabs-recordings/*.mp3
