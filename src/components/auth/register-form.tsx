@@ -128,21 +128,21 @@ export function RegisterForm() {
         <p
           role="alert"
           aria-live="polite"
-          className="text-sm text-red-700 bg-red-50 border border-red-200 rounded-md px-3 py-2"
+          className="text-sm text-destructive-foreground bg-destructive/15 border border-destructive/40 rounded-lg px-3 py-2"
         >
           {error}
         </p>
       )}
 
-      <Button type="submit" isLoading={isLoading} className="w-full mt-1">
-        Create account
+      <Button type="submit" disabled={isLoading} className="w-full mt-1">
+        {isLoading ? "Creating account…" : "Create account"}
       </Button>
 
-      <p className="text-sm text-center text-gray-600">
+      <p className="text-sm text-center text-muted-foreground">
         Already have an account?{" "}
         <Link
           href="/login"
-          className="text-brand-accent font-medium hover:text-brand-teal underline-offset-2 hover:underline"
+          className="text-primary font-medium hover:underline underline-offset-4"
         >
           Sign in
         </Link>

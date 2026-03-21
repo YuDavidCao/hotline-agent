@@ -14,12 +14,12 @@ export default async function DashboardLayout({
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-slate-50">
-      <header className="bg-white border-b border-slate-200/90 shadow-sm">
+    <div className="min-h-screen flex flex-col bg-background">
+      <header className="bg-card border-b border-border shadow-sm">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between gap-4">
           <div className="flex items-center gap-3 min-w-0">
             <span
-              className="hidden sm:flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-brand-teal-soft text-brand-teal border border-teal-100"
+              className="hidden sm:flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-muted text-primary border border-border"
               aria-hidden
             >
               <svg
@@ -37,16 +37,16 @@ export default async function DashboardLayout({
               </svg>
             </span>
             <div className="min-w-0">
-              <span className="font-semibold text-lg text-brand-ink tracking-tight block truncate">
+              <span className="font-semibold text-lg text-foreground tracking-tight block truncate">
                 Hotline Agent
               </span>
-              <span className="text-xs text-slate-500 hidden sm:block">
+              <span className="text-xs text-muted-foreground hidden sm:block">
                 Human & LLM call transcripts
               </span>
             </div>
           </div>
           <div className="flex items-center gap-3 shrink-0">
-            <span className="text-sm text-slate-600 truncate max-w-[10rem] sm:max-w-xs">
+            <span className="text-sm text-muted-foreground truncate max-w-[10rem] sm:max-w-xs">
               {session.user?.name ?? session.user?.email}
             </span>
             <SignOutButton />
