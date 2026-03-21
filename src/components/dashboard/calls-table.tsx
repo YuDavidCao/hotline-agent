@@ -56,7 +56,7 @@ function transcriptPreview(transcript: string): string {
 
 function severityClass(severity: number): string {
   if (severity <= 3) return "bg-green-500/10 text-green-700 border-green-500/30 dark:text-green-400"
-  if (severity <= 6) return "bg-yellow-500/10 text-yellow-700 border-yellow-500/30 dark:text-yellow-400"
+  if (severity < 6) return "bg-yellow-500/10 text-yellow-700 border-yellow-500/30 dark:text-yellow-400"
   return "bg-red-500/10 text-red-700 border-red-500/30 dark:text-red-400"
 }
 
@@ -366,7 +366,8 @@ export function CallsTable({ calls }: { calls: CallRow[] }) {
                 <span
                   className={cn(
                     "rounded-sm border px-2 py-0.5 text-[11px] font-semibold",
-                    severityClass(call.severity)
+                    severityClass(call.severity),
+                    call.severity >= 6 && "animate-breathing-red"
                   )}
                 >
                   {call.severity}
