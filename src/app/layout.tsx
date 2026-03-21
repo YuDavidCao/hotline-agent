@@ -2,6 +2,10 @@ import type { Metadata } from "next"
 import localFont from "next/font/local"
 import "./globals.css"
 import { AuthSessionProvider } from "@/components/providers/session-provider"
+import { Figtree } from "next/font/google"
+import { cn } from "@/lib/utils"
+
+const figtree = Figtree({ subsets: ["latin"], variable: "--font-sans" })
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -15,8 +19,12 @@ const geistMono = localFont({
 })
 
 export const metadata: Metadata = {
-  title: "NextJS Starter",
-  description: "Next.js starter with Prisma, NeonDB, and email/password auth",
+  title: {
+    default: "Hotline Agent",
+    template: "%s | Hotline Agent",
+  },
+  description:
+    "Analyze phone conversations between humans and LLM agents with structured transcripts. Not intended for HIPAA-covered healthcare or PHI.",
 }
 
 export default function RootLayout({
@@ -25,10 +33,8 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-gray-50`}
-      >
+    <html lang="en" className={cn("dark", figtree.variable, geistSans.variable, geistMono.variable)}>
+      <body className="min-h-screen bg-background font-sans text-foreground antialiased">
         <AuthSessionProvider>{children}</AuthSessionProvider>
       </body>
     </html>

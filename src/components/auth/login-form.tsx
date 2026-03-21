@@ -55,41 +55,57 @@ export function LoginForm() {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+    <form
+      onSubmit={handleSubmit}
+      className="flex flex-col gap-4"
+      noValidate
+      spellCheck={false}
+    >
       <Input
         label="Email"
+        name="email"
         type="email"
+        inputMode="email"
+        autoCapitalize="none"
+        autoCorrect="off"
         value={email}
         onChange={(e) => setEmail(e.target.value)}
         error={fieldErrors.email?.[0]}
         placeholder="you@example.com"
         autoComplete="email"
+        required
       />
       <Input
         label="Password"
+        name="password"
         type="password"
         value={password}
         onChange={(e) => setPassword(e.target.value)}
         error={fieldErrors.password?.[0]}
         placeholder="••••••••"
         autoComplete="current-password"
+        required
       />
 
       {error && (
-        <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-md px-3 py-2">
+        <p
+          role="alert"
+          aria-live="polite"
+          className="text-sm text-destructive-foreground bg-destructive/15 border border-destructive/40 rounded-lg px-3 py-2"
+        >
           {error}
         </p>
       )}
 
-      <Button type="submit" isLoading={isLoading} className="w-full mt-1">
-        Sign in
+      <Button type="submit" disabled={isLoading} className="w-full mt-1">
+        {isLoading ? "Signing in…" : "Sign in"}
       </Button>
 
-      <p className="text-sm text-center text-gray-600">
+      <p className="text-sm text-center text-muted-foreground">
         Don&apos;t have an account?{" "}
         <Link
           href="/register"
-          className="text-indigo-600 hover:text-indigo-500 font-medium"
+          className="text-primary font-medium hover:underline underline-offset-4"
         >
           Create one
         </Link>
