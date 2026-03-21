@@ -62,9 +62,9 @@ model InboundCall {
   agentVersion String 
   agentName String 
   retellVariables Json 
-  startTime Int 
-  endTime Int 
-  duration Int 
+  startTime BigInt 
+  endTime BigInt 
+  duration BigInt 
   transcript Json 
   recordingURL String
   disconnectionReason String 
