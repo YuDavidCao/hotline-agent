@@ -43,4 +43,4 @@ next-env.d.ts
 data/elevenlabs-webhooks/*.json
 
 # Local call recordings from post_call_audio (large / may contain PII)
-public/elevenlabs-recordings/*.mp3
+/recording/*.mp3

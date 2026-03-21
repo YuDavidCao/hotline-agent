@@ -8,13 +8,10 @@ import {
 import type { MyCallData } from "@/lib/inbound-call-types";
 import {
   getStoredRecordingRelativeUrlIfExists,
-  saveElevenLabsRecordingToPublicMp3,
+  saveElevenLabsRecordingMp3,
 } from "@/lib/elevenlabs-recording";
 import { archiveElevenLabsWebhookRaw } from "@/lib/elevenlabs-webhook-archive";
 import { transcriptSummary } from "@/lib/transcript_summary";
-
-/** ElevenLabs often delivers post_call_audio before post_call_transcription; wait so the row exists. */
-const POST_CALL_AUDIO_DB_DELAY_MS = 10_000;
 
 type TranscriptTurn = {
   role?: string;
@@ -110,7 +107,9 @@ export async function POST(req: Request) {
       secret,
     )) as { type?: string; data?: Record<string, unknown> };
 
-    await archiveElevenLabsWebhookRaw(rawBody, event);
+    if (process.env.NODE_ENV !== "production") {
+      await archiveElevenLabsWebhookRaw(rawBody, event);
+    }
 
     if (event.type === "post_call_transcription" && event.data) {
       const data = event.data;
@@ -136,12 +135,9 @@ export async function POST(req: Request) {
       const conversationId = data.conversation_id;
       const fullAudio = data.full_audio;
       if (conversationId && fullAudio) {
-        const recordingUrl = await saveElevenLabsRecordingToPublicMp3(
+        const recordingUrl = await saveElevenLabsRecordingMp3(
           conversationId,
           fullAudio,
-        );
-        await new Promise<void>((resolve) =>
-          setTimeout(resolve, POST_CALL_AUDIO_DB_DELAY_MS),
         );
         const { updated } = await updateInboundCallRecordingUrl(
           conversationId,
