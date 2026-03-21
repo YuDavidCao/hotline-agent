@@ -81,7 +81,12 @@ export function RegisterForm() {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+    <form
+      onSubmit={handleSubmit}
+      className="flex flex-col gap-4"
+      noValidate
+      spellCheck={false}
+    >
       <Input
         label="Name"
         type="text"
@@ -120,7 +125,11 @@ export function RegisterForm() {
       />
 
       {error && (
-        <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-md px-3 py-2">
+        <p
+          role="alert"
+          aria-live="polite"
+          className="text-sm text-red-700 bg-red-50 border border-red-200 rounded-md px-3 py-2"
+        >
           {error}
         </p>
       )}
@@ -133,7 +142,7 @@ export function RegisterForm() {
         Already have an account?{" "}
         <Link
           href="/login"
-          className="text-indigo-600 hover:text-indigo-500 font-medium"
+          className="text-brand-accent font-medium hover:text-brand-teal underline-offset-2 hover:underline"
         >
           Sign in
         </Link>

@@ -15,8 +15,12 @@ const geistMono = localFont({
 })
 
 export const metadata: Metadata = {
-  title: "NextJS Starter",
-  description: "Next.js starter with Prisma, NeonDB, and email/password auth",
+  title: {
+    default: "Hotline Agent",
+    template: "%s | Hotline Agent",
+  },
+  description:
+    "Analyze phone conversations between humans and LLM agents with structured transcripts. Not intended for HIPAA-covered healthcare or PHI.",
 }
 
 export default function RootLayout({
@@ -27,7 +31,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-gray-50`}
+        className={`${geistSans.variable} ${geistMono.variable} font-sans antialiased bg-slate-50 text-slate-900`}
       >
         <AuthSessionProvider>{children}</AuthSessionProvider>
       </body>

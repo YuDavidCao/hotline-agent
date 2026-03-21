@@ -3,20 +3,37 @@ import { Card } from "@/components/ui/card"
 import { LoginForm } from "@/components/auth/login-form"
 
 export const metadata: Metadata = {
-  title: "Sign in | NextJS Starter",
+  title: "Sign in | Hotline Agent",
+  description:
+    "Sign in to review human–LLM phone transcripts. Not for HIPAA-covered healthcare use.",
 }
 
 export default function LoginPage() {
   return (
-    <main className="min-h-screen flex items-center justify-center p-4">
-      <div className="w-full max-w-sm">
-        <div className="text-center mb-6">
-          <h1 className="text-2xl font-bold text-gray-900">Welcome back</h1>
-          <p className="text-sm text-gray-600 mt-1">Sign in to your account</p>
+    <main className="min-h-screen flex flex-col items-center justify-center p-4 sm:p-8 bg-gradient-to-b from-white via-slate-50 to-brand-teal-soft/40">
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_85%_50%_at_50%_-15%,rgba(13,148,136,0.08),transparent)] pointer-events-none" />
+      <div className="relative w-full max-w-md">
+        <div className="text-center mb-8">
+          <p className="text-brand-teal font-semibold tracking-[0.2em] text-xs uppercase mb-3">
+            Human–LLM phone analysis
+          </p>
+          <h1 className="text-2xl sm:text-[1.75rem] font-semibold text-brand-ink tracking-tight">
+            Welcome back
+          </h1>
+          <p className="text-sm text-slate-600 mt-2 leading-relaxed">
+            Sign in to review call transcripts from conversations between people and LLM
+            agents.
+          </p>
         </div>
-        <Card>
+        <Card className="shadow-md shadow-slate-200/50 border-slate-200/80">
           <LoginForm />
         </Card>
+        <p className="text-center text-xs text-slate-500 mt-8 max-w-md mx-auto leading-relaxed">
+          <strong className="font-medium text-slate-600">Not for HIPAA-covered healthcare.</strong>{" "}
+          This service is not intended for healthcare workers handling protected health
+          information (PHI) under HIPAA. It is for analyzing ordinary phone conversations
+          between humans and LLMs. By signing in you confirm appropriate, non-HIPAA use.
+        </p>
       </div>
     </main>
   )
