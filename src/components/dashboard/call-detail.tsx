@@ -15,7 +15,6 @@ export interface FullCall {
   callId: string
   agentId: string
   agentVersion: number
-  agentName: string
   retellVariables: Record<string, unknown>
   startTime: number
   endTime: number
@@ -59,7 +58,7 @@ function toEntry(call: FullCall): DashboardCallEntry {
     endTimestamp: call.endTime,
     durationMs: call.duration,
     direction: call.direction as "inbound" | "outbound",
-    agentName: call.agentName,
+    agentId: call.agentId,
     fromNumber: call.fromNumber,
     toNumber: call.toNumber,
     callStatus: call.disconnectionReason.replace(/_/g, " "),
