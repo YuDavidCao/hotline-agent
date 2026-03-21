@@ -59,7 +59,7 @@ model InboundCall {
   id      String  @id @default(cuid())
   callId  String  @unique
   agentID String 
-  agentVersion String 
+  agentVersion Int 
   agentName String 
   retellVariables Json 
   startTime BigInt 
