@@ -1,25 +1,11 @@
 import { generateText, Output } from 'ai';
 import { z } from 'zod';
+import { openai } from '@ai-sdk/openai';
 
-interface Transcript {
-  role: string,
-  content: string
-}
-
-function serializeTranscript(transcript: Transcript[]) {
-  return transcript
-    .map(({ role, content }) => `${role}: ${content}`)
-    .join('\n');
-}
-
-export async function transcriptSummary(
-  transcript: Transcript[]
-) {
+export async function transcriptSummary(transcript: string) {
   try {
-    const serializedTranscript = serializeTranscript(transcript);
-
     const { output } = await generateText({
-      model: 'openai/gpt-4o-mini',
+      model: openai('gpt-4o-mini'),
       output: Output.object({
         schema: z.object({
           notes: z.array(
@@ -37,23 +23,30 @@ You are analyzing a call transcript between a user and a suicide hotline agent.
 Task:
 - Extract the most important notes from the transcript.
 - For each note, include a short reason explaining why it matters.
-- Provide an overall severity score from 1 to 10, where:
-  - 1 = low concern
-  - 10 = immediate critical concern
-
-Output requirements:
-- Return structured output with:
-  - notes: array of objects with { note: string, reason: string }
-  - severity: a number from 1 to 10
+- Provide an overall severity score from 1 to 10.
 
 Transcript:
-${serializedTranscript}
+${transcript}
 `.trim(),
     });
 
-    return output
+    // ✅ fallback protection
+    if (!output) {
+      return {
+        notes: [],
+        severity: 1,
+      };
+    }
+
+    return output;
+
   } catch (error) {
     console.error('Error generating transcript summary', error);
-    return null;
+
+    // ✅ never crash webhook
+    return {
+      notes: [],
+      severity: 1,
+    };
   }
 }
