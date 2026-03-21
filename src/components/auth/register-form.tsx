@@ -81,7 +81,12 @@ export function RegisterForm() {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+    <form
+      onSubmit={handleSubmit}
+      className="flex flex-col gap-4"
+      noValidate
+      spellCheck={false}
+    >
       <Input
         label="Name"
         type="text"
@@ -120,20 +125,24 @@ export function RegisterForm() {
       />
 
       {error && (
-        <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-md px-3 py-2">
+        <p
+          role="alert"
+          aria-live="polite"
+          className="text-sm text-destructive-foreground bg-destructive/15 border border-destructive/40 rounded-lg px-3 py-2"
+        >
           {error}
         </p>
       )}
 
-      <Button type="submit" isLoading={isLoading} className="w-full mt-1">
-        Create account
+      <Button type="submit" disabled={isLoading} className="w-full mt-1">
+        {isLoading ? "Creating account…" : "Create account"}
       </Button>
 
-      <p className="text-sm text-center text-gray-600">
+      <p className="text-sm text-center text-muted-foreground">
         Already have an account?{" "}
         <Link
           href="/login"
-          className="text-indigo-600 hover:text-indigo-500 font-medium"
+          className="text-primary font-medium hover:underline underline-offset-4"
         >
           Sign in
         </Link>

@@ -1,49 +1,64 @@
 import Link from "next/link"
+import { Button } from "@/components/ui/button"
 
 export default function Home() {
   return (
-    <main className="min-h-screen flex flex-col items-center justify-center p-8">
-      <div className="max-w-md w-full text-center">
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold text-gray-900 mb-3">
-            NextJS Starter
-          </h1>
-          <p className="text-gray-600">
-            A full-stack Next.js app with Prisma, NeonDB, and secure
-            email/password authentication.
+    <main className="min-h-screen flex flex-col">
+      <div className="flex-1 flex flex-col items-center justify-center px-6 py-16 sm:py-24">
+        <div className="max-w-lg w-full text-center">
+          <p className="text-primary font-semibold tracking-[0.2em] text-xs uppercase mb-4">
+            Human–LLM phone analysis
           </p>
-        </div>
+          <h1 className="text-3xl sm:text-4xl font-semibold text-foreground tracking-tight text-balance">
+            Transcripts for phone calls between people and LLMs
+          </h1>
+          <p className="mt-4 text-muted-foreground text-[15px] leading-relaxed">
+            Route inbound calls through an LLM-based agent, then review and analyze what
+            was said on both sides—built for conversation research and product QA, not
+            for patient care workflows.
+          </p>
 
-        <div className="flex flex-col sm:flex-row gap-3 justify-center">
-          <Link
-            href="/login"
-            className="inline-flex items-center justify-center px-6 py-3 rounded-md bg-indigo-600 text-white font-medium hover:bg-indigo-700 transition-colors"
-          >
-            Sign in
-          </Link>
-          <Link
-            href="/register"
-            className="inline-flex items-center justify-center px-6 py-3 rounded-md border border-gray-300 bg-white text-gray-700 font-medium hover:bg-gray-50 transition-colors"
-          >
-            Create account
-          </Link>
-        </div>
-
-        <div className="mt-12 grid grid-cols-3 gap-4 text-sm text-gray-500">
-          <div className="flex flex-col items-center gap-1">
-            <span className="text-2xl">🔐</span>
-            <span>Auth.js v5</span>
-          </div>
-          <div className="flex flex-col items-center gap-1">
-            <span className="text-2xl">🐘</span>
-            <span>NeonDB</span>
-          </div>
-          <div className="flex flex-col items-center gap-1">
-            <span className="text-2xl">🔷</span>
-            <span>Prisma ORM</span>
+          <div className="mt-10 flex flex-col sm:flex-row gap-3 justify-center">
+            <Button asChild>
+              <Link href="/login">Sign in</Link>
+            </Button>
+            <Button variant="outline" asChild>
+              <Link href="/register">Create account</Link>
+            </Button>
           </div>
         </div>
       </div>
+
+      <footer className="border-t border-border bg-card/50 backdrop-blur-sm">
+        <div className="max-w-5xl mx-auto px-6 py-8 grid grid-cols-1 sm:grid-cols-3 gap-6 text-center sm:text-left text-sm text-muted-foreground">
+          <div>
+            <p className="font-medium text-foreground mb-1">Secure access</p>
+            <p className="text-sm leading-relaxed">
+              Email and password authentication with encrypted sessions.
+            </p>
+          </div>
+          <div>
+            <p className="font-medium text-foreground mb-1">Structured data</p>
+            <p className="text-sm leading-relaxed">
+              PostgreSQL via Prisma for reliable session and user records.
+            </p>
+          </div>
+          <div>
+            <p className="font-medium text-foreground mb-1">Conversation-first</p>
+            <p className="text-sm leading-relaxed">
+              Transcript layout tuned for reviewing human and LLM turns on calls.
+            </p>
+          </div>
+        </div>
+        <div className="max-w-3xl mx-auto px-6 pb-8">
+          <p className="text-xs text-muted-foreground text-center leading-relaxed border-t border-border pt-6">
+            <strong className="font-medium text-foreground">Not for HIPAA-covered healthcare.</strong>{" "}
+            Hotline Agent is not intended for healthcare providers, PHI, or use as a
+            HIPAA-compliant service. It is for analyzing phone conversations between
+            humans and LLMs outside regulated medical contexts.
+          </p>
+        </div>
+      </footer>
     </main>
   )
 }

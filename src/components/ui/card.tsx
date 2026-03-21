@@ -1,14 +1,18 @@
-interface CardProps {
-  children: React.ReactNode
-  className?: string
-}
+import * as React from "react"
 
-export function Card({ children, className = "" }: CardProps) {
+import { cn } from "@/lib/utils"
+
+function Card({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
-      className={`bg-white rounded-xl shadow-sm border border-gray-200 p-6 ${className}`}
-    >
-      {children}
-    </div>
+      data-slot="card"
+      className={cn(
+        "rounded-xl border border-border bg-card p-6 text-card-foreground shadow-sm",
+        className
+      )}
+      {...props}
+    />
   )
 }
+
+export { Card }
