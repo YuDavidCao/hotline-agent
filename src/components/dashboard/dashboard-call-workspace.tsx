@@ -20,6 +20,15 @@ import {
   type CallSortOption,
   type DashboardCallEntry,
 } from "@/lib/dashboard-mock"
+import type {
+  HighRiskPhrase,
+  NegationPhrase,
+  RiskDataPayload,
+} from "@/lib/risk-annotations"
+import { AnnotatedTranscriptTurns } from "./annotated-transcript"
+
+/** Severity score threshold (on 0-100 scale) for the breathing red highlight. */
+const HIGH_SEVERITY_THRESHOLD = 70
 
 function formatMetaRange(entry: DashboardCallEntry) {
   const start = new Date(entry.startTimestamp)
@@ -202,6 +211,18 @@ export function DashboardCallWorkspace({
     null
   )
 
+  const [riskData, setRiskData] = React.useState<RiskDataPayload | null>(null)
+
+  React.useEffect(() => {
+    fetch("/api/risk-data")
+      .then((r) => r.json())
+      .then((data: RiskDataPayload) => setRiskData(data))
+      .catch(() => {})
+  }, [])
+
+  const riskPhrases: HighRiskPhrase[] = riskData?.risk ?? []
+  const negPhrases: NegationPhrase[] = riskData?.negation ?? []
+
   const sortedCalls = React.useMemo(
     () => sortDashboardCalls(DASHBOARD_MOCK_CALLS, sortKey),
     [sortKey]
@@ -264,6 +285,9 @@ export function DashboardCallWorkspace({
 
   const showSortProgress = isSorting || sortProgress > 0
 
+  const isHighSeverity = (call: DashboardCallEntry) =>
+    call.severityScore > HIGH_SEVERITY_THRESHOLD
+
   return (
     <div
       className={cn(
@@ -322,12 +346,18 @@ export function DashboardCallWorkspace({
                         "hover:bg-muted/80 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
                         selectedId === call.id
                           ? "bg-muted text-foreground"
-                          : "text-foreground/90"
+                          : "text-foreground/90",
+                        isHighSeverity(call) && "animate-breathing-red rounded"
                       )}
                     >
                       <span className="line-clamp-2 font-medium leading-snug">
                         {call.listLabel}
                       </span>
+                      {isHighSeverity(call) && (
+                        <span className="mt-1 inline-block rounded-sm bg-destructive/15 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-destructive">
+                          Score {call.severityScore}
+                        </span>
+                      )}
                     </button>
                     <Separator className="my-2" />
                   </React.Fragment>
@@ -363,6 +393,9 @@ export function DashboardCallWorkspace({
                             )}
                           >
                             {selected.severity}
+                          </span>
+                          <span className="rounded-sm bg-muted px-2 py-0.5 text-[11px] font-medium tabular-nums text-muted-foreground">
+                            Score {selected.severityScore}/100
                           </span>
                           <span className="text-sm text-muted-foreground">
                             {selected.direction} · {selected.durationMs / 1000}s
@@ -410,15 +443,32 @@ export function DashboardCallWorkspace({
                     Full transcript
                   </h2>
                   <p className="mt-0.5 text-sm text-muted-foreground">
-                    Plain text and turn-by-turn (like{" "}
-                    <code className="text-[13px]">transcript</code> /{" "}
-                    <code className="text-[13px]">transcript_object</code>).
+                    Matched phrases are{" "}
+                    <span className="underline decoration-destructive decoration-2 underline-offset-4">
+                      risk
+                    </span>{" "}
+                    (red) or{" "}
+                    <span className="underline decoration-secondary decoration-2 underline-offset-4">
+                      de-escalation
+                    </span>{" "}
+                    (green). Hover for details.
                   </p>
                 </div>
                 <ScrollArea className="flex-1">
                   <div className="p-4">
                     {selected ? (
                       <div className="space-y-6">
+                        <section aria-label="Transcript turns">
+                          <h3 className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                            Turns
+                          </h3>
+                          <AnnotatedTranscriptTurns
+                            turns={selected.transcriptObject}
+                            risk={riskPhrases}
+                            negation={negPhrases}
+                          />
+                        </section>
+                        <Separator />
                         <section aria-label="Plain transcript">
                           <h3 className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                             Raw transcript
@@ -426,31 +476,6 @@ export function DashboardCallWorkspace({
                           <pre className="whitespace-pre-wrap break-words font-mono text-sm leading-relaxed text-foreground">
                             {selected.transcript.trim()}
                           </pre>
-                        </section>
-                        <Separator />
-                        <section aria-label="Transcript turns">
-                          <h3 className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                            Turns
-                          </h3>
-                          <ul className="space-y-4">
-                            {selected.transcriptObject.map((turn, i) => (
-                              <li key={i} className="flex gap-3">
-                                <span
-                                  className={cn(
-                                    "w-16 shrink-0 pt-0.5 text-[11px] font-semibold uppercase tracking-wide",
-                                    turn.role === "agent"
-                                      ? "text-foreground"
-                                      : "text-muted-foreground"
-                                  )}
-                                >
-                                  {turn.role === "agent" ? "Agent" : "User"}
-                                </span>
-                                <span className="text-[15px] leading-relaxed text-foreground">
-                                  {turn.content}
-                                </span>
-                              </li>
-                            ))}
-                          </ul>
                         </section>
                       </div>
                     ) : null}
