@@ -143,10 +143,14 @@ export function AnnotatedTranscriptTurns({
   turns,
   risk,
   negation,
+  activeTurnIndex,
+  turnRefs,
 }: {
   turns: TranscriptTurn[]
   risk: HighRiskPhrase[]
   negation: NegationPhrase[]
+  activeTurnIndex?: number
+  turnRefs?: React.MutableRefObject<(HTMLLIElement | null)[]>
 }) {
   const annotated = React.useMemo(
     () =>
@@ -160,7 +164,14 @@ export function AnnotatedTranscriptTurns({
   return (
     <ul className="space-y-4">
       {annotated.map((turn, i) => (
-        <li key={i} className="flex gap-3">
+        <li
+          key={i}
+          ref={(el) => { if (turnRefs) turnRefs.current[i] = el }}
+          className={cn(
+            "flex gap-3 rounded-sm px-2 py-1 -mx-2 transition-colors duration-300",
+            activeTurnIndex === i && "bg-accent/40",
+          )}
+        >
           <span
             className={cn(
               "w-16 shrink-0 pt-0.5 text-[11px] font-semibold uppercase tracking-wide",

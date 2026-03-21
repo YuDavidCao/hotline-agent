@@ -9,6 +9,7 @@ import {
   type DashboardCallEntry,
 } from "@/lib/dashboard-mock"
 import type { HighRiskPhrase, NegationPhrase } from "@/lib/risk-annotations"
+import type { TimedCaption } from "@/lib/word-alignment"
 import { AnnotatedTranscriptTurns } from "./annotated-transcript"
 
 function formatMetaRange(entry: DashboardCallEntry) {
@@ -24,17 +25,48 @@ function formatMetaRange(entry: DashboardCallEntry) {
   return `${fmt(start)} → ${fmt(end)}`
 }
 
+function activeTurnFromCaptions(
+  currentTime: number | undefined,
+  captions: TimedCaption[],
+): number | undefined {
+  if (currentTime === undefined || captions.length === 0) return undefined
+  for (const cap of captions) {
+    if (currentTime >= cap.start && currentTime < cap.end) {
+      return cap.turnIndex
+    }
+  }
+  return undefined
+}
+
 export function CallTranscriptView({
   entry,
   risk,
   negation,
   onBack,
+  currentTime,
+  captions,
+  audioSlot,
 }: {
   entry: DashboardCallEntry
   risk: HighRiskPhrase[]
   negation: NegationPhrase[]
   onBack: () => void
+  currentTime?: number
+  captions?: TimedCaption[]
+  audioSlot?: React.ReactNode
 }) {
+  const turnRefs = React.useRef<(HTMLLIElement | null)[]>([])
+  const activeTurn = activeTurnFromCaptions(currentTime, captions ?? [])
+
+  // Auto-scroll to the active turn
+  React.useEffect(() => {
+    if (activeTurn === undefined) return
+    const el = turnRefs.current[activeTurn]
+    if (el) {
+      el.scrollIntoView({ behavior: "smooth", block: "nearest" })
+    }
+  }, [activeTurn])
+
   return (
     <div className="flex flex-col gap-6">
       {/* Header with back button */}
@@ -107,6 +139,8 @@ export function CallTranscriptView({
         </dl>
       </div>
 
+      {audioSlot}
+
       {/* Annotated transcript turns */}
       <div className="rounded-md border border-border bg-card">
         <div className="border-b border-border px-5 py-3">
@@ -131,6 +165,8 @@ export function CallTranscriptView({
               turns={entry.transcriptObject}
               risk={risk}
               negation={negation}
+              activeTurnIndex={activeTurn}
+              turnRefs={turnRefs}
             />
           </div>
         </ScrollArea>
