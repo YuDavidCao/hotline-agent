@@ -37,7 +37,7 @@ export default async function DashboardPage() {
         </p>
       </div>
 
-      <Card className="border-l-4 border-l-primary overflow-hidden p-0">
+      <Card className="border-l-4 border-l-link overflow-hidden p-0">
         <div className="px-6 py-4 border-b border-border bg-muted/40 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
           <div>
             <h2 className="text-lg font-semibold text-foreground">
@@ -47,7 +47,7 @@ export default async function DashboardPage() {
               Placeholder — encounter ID and timestamps will appear after integration.
             </p>
           </div>
-          <span className="text-[11px] font-medium uppercase tracking-wider text-primary whitespace-nowrap">
+          <span className="text-[11px] font-medium uppercase tracking-wider text-link whitespace-nowrap">
             Demo data
           </span>
         </div>
@@ -62,7 +62,7 @@ export default async function DashboardPage() {
                 <span
                   className={`shrink-0 w-16 text-[11px] font-semibold uppercase tracking-wide pt-0.5 ${
                     line.role === "agent"
-                      ? "text-primary"
+                      ? "text-foreground"
                       : "text-muted-foreground"
                   }`}
                 >

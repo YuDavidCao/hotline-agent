@@ -19,7 +19,7 @@ export default async function DashboardLayout({
         <div className="max-w-5xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between gap-4">
           <div className="flex items-center gap-3 min-w-0">
             <span
-              className="hidden sm:flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-muted text-primary border border-border"
+              className="hidden sm:flex h-9 w-9 shrink-0 items-center justify-center rounded-sm bg-muted text-link border border-border"
               aria-hidden
             >
               <svg
