@@ -71,4 +71,6 @@ model InboundCall {
   fromNumber String 
   toNumber String
   direction String 
+  notes Json
+  severity Int
 }
