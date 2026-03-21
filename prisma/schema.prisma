@@ -56,7 +56,8 @@ model VerificationToken {
 }
 
 model InboundCall { 
-  callId  String  @id @default(cuid())
+  id      String  @id @default(cuid())
+  callId  String  @unique
   agentID String 
   agentVersion String 
   agentName String 
