@@ -150,17 +150,8 @@ function ActionsCell({ call }: { call: CallRow }) {
         </DropdownMenuItem>
         <DropdownMenuItem
           onClick={async () => {
-            // Your hash
-            const encoder = new TextEncoder()
-            const data = encoder.encode(call.fromNumber)
-            const hashBuffer = await crypto.subtle.digest('SHA-256', data)
-            const hashArray = Array.from(new Uint8Array(hashBuffer))
-            const hashBase64 = btoa(String.fromCharCode(...hashArray))
-            const urlSafe = hashBase64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '')
-
-            // Push URL with hash as path, number as query
             const encodedNumber = encodeURIComponent(call.fromNumber)
-            router.push(`/history/${urlSafe}?number=${encodedNumber}`)
+            router.push(`/history/${encodedNumber}`)
           }}
         >
           Track this number
