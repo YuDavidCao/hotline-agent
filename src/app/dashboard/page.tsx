@@ -23,8 +23,8 @@ export default async function DashboardPage() {
           Welcome, {session.user?.name ?? "there"}
         </h1>
         <p className="text-muted-foreground mt-2 max-w-4xl text-[15px] leading-relaxed">
-          Browse calls, inspect Retell-style metadata, and read the full transcript. The
-          list and panels below use demo data until your backend is connected.
+          Browse calls, inspect metadata, and review annotated transcripts.
+          Click any row to open the full transcript with risk highlights.
         </p>
       </div>
 
@@ -36,7 +36,7 @@ export default async function DashboardPage() {
                 Call workspace
               </h2>
               <p className="text-sm text-muted-foreground mt-0.5">
-                Resizable panels — scroll list, metadata, and transcript.
+                Sortable table with severity scores and risk analysis.
               </p>
             </div>
             <span className="text-[11px] font-medium uppercase tracking-wider text-link whitespace-nowrap">
@@ -44,7 +44,7 @@ export default async function DashboardPage() {
             </span>
           </div>
         </div>
-        <div className="p-3 sm:p-4 lg:p-5">
+        <div className="p-4 sm:p-5 lg:p-6">
           <DashboardCallWorkspace />
         </div>
       </Card>
