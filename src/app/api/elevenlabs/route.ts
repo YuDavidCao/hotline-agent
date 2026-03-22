@@ -12,7 +12,6 @@ import {
 } from "@/lib/elevenlabs-recording";
 import { archiveElevenLabsWebhookRaw } from "@/lib/elevenlabs-webhook-archive";
 import { transcriptSummary } from "@/lib/transcript_summary";
-import { analyzeUserSentiment } from "@/lib/snowflake";
 
 type TranscriptTurn = {
   role?: string;
@@ -84,7 +83,6 @@ function mapPostCallTranscriptionToMyCallData(data: Record<string, unknown>): My
     direction: phone.direction,
     notes: [],
     severity: 1,
-    sentimentScore: 0,
   };
 }
 
@@ -117,17 +115,12 @@ export async function POST(req: Request) {
       const data = event.data;
       if (data.conversation_id) {
         const call = mapPostCallTranscriptionToMyCallData(data);
-        const [summaryResult, sentimentResult, pendingRecording] =
-          await Promise.all([
-            transcriptSummary(call.transcript),
-            analyzeUserSentiment(call.transcript).catch((err) => {
-              console.error("Sentiment analysis failed:", err);
-              return { sentimentScore: 0, lineScores: [] };
-            }),
-            getStoredRecordingRelativeUrlIfExists(call.call_id).then(
-              (r) => r ?? "",
-            ),
-          ]);
+        const summaryResult = await transcriptSummary(call.transcript);
+        // Check for audio AFTER transcriptSummary, so post_call_audio has had
+        // time to save the file. If it still hasn't arrived, updateInboundCallRecordingUrl
+        // will update the row once the audio webhook fires.
+        const pendingRecording =
+          (await getStoredRecordingRelativeUrlIfExists(call.call_id)) ?? "";
 
         const { notes, severity } = summaryResult!;
         await saveInboundCallToDB({
@@ -135,7 +128,6 @@ export async function POST(req: Request) {
           recording_url: pendingRecording || call.recording_url,
           notes,
           severity,
-          sentimentScore: sentimentResult.sentimentScore,
         });
       }
     }

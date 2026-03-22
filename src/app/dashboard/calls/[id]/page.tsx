@@ -24,7 +24,6 @@ export default async function CallPage({ params }: { params: { id: string } }) {
     direction: raw.direction,
     notes: (raw.notes as { note: string; reason: string }[] | null) ?? [],
     severity: raw.severity,
-    sentimentScore: raw.sentimentScore,
   }
 
   return <CallDetail call={call} />
