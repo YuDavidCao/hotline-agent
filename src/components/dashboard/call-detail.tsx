@@ -137,6 +137,12 @@ function AudioPlayer({
 
     const tick = () => {
       if (audio.paused) return
+      // Setting currentTime is async; until seek completes, reading currentTime
+      // can still be the pre-seek value and would overwrite optimistic UI state.
+      if (audio.seeking) {
+        rafId = requestAnimationFrame(tick)
+        return
+      }
       const t = audio.currentTime
       setCurrentTime(t)
       const now = performance.now()
@@ -151,11 +157,19 @@ function AudioPlayer({
     const onPause = () => { if (rafId !== null) cancelAnimationFrame(rafId) }
     const onMeta = () => setDuration(audio.duration)
     const onEnded = () => setPlaying(false)
+    const onSeeked = () => {
+      const t = audio.currentTime
+      setCurrentTime(t)
+      if (analysis) {
+        onTimeUpdate?.(t, analysis.captions)
+      }
+    }
 
     audio.addEventListener("play", onPlay)
     audio.addEventListener("pause", onPause)
     audio.addEventListener("loadedmetadata", onMeta)
     audio.addEventListener("ended", onEnded)
+    audio.addEventListener("seeked", onSeeked)
 
     // Metadata may have already loaded (e.g. cached audio on page refresh)
     if (audio.readyState >= HTMLMediaElement.HAVE_METADATA) {
@@ -170,6 +184,7 @@ function AudioPlayer({
       audio.removeEventListener("pause", onPause)
       audio.removeEventListener("loadedmetadata", onMeta)
       audio.removeEventListener("ended", onEnded)
+      audio.removeEventListener("seeked", onSeeked)
     }
   }, [analysis, onTimeUpdate])
 
@@ -197,11 +212,10 @@ function AudioPlayer({
   }
 
   const seekBar = (e: React.MouseEvent<HTMLDivElement>) => {
-    const audio = audioRef.current
-    if (!audio || !duration) return
+    if (!duration) return
     const rect = e.currentTarget.getBoundingClientRect()
     const ratio = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width))
-    audio.currentTime = ratio * duration
+    seek(ratio * duration)
   }
 
   const progress = duration > 0 ? (currentTime / duration) * 100 : 0
