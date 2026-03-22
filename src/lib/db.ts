@@ -34,7 +34,6 @@ export async function saveInboundCallToDB(callData: MyCallData) {
 
     return call;
   } catch (error) {
-    console.error("Error saving inbound call to DB:", error);
     throw error;
   }
 }

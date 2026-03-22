@@ -385,9 +385,8 @@ export function CallsTable({ calls }: { calls: CallRow[] }) {
         if (!res.ok) {
           throw new Error("Failed to update resolved state")
         }
-      } catch (error) {
+      } catch {
         setResolvedByCallId((prev) => ({ ...prev, [callId]: !nextResolved }))
-        console.error(error)
       }
     },
     [],

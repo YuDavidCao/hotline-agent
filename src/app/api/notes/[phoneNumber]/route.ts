@@ -57,7 +57,6 @@ export async function GET(_req: NextRequest, context: NotesRouteContext) {
   try {
     const params = context.params;
     const phoneNumber = params.phoneNumber;
-    console.log(phoneNumber);
     const allCalls = await prisma.inboundCall.findMany({
       where: {
         fromNumber: phoneNumber,
@@ -92,7 +91,6 @@ export async function GET(_req: NextRequest, context: NotesRouteContext) {
 
     return NextResponse.json(callHistory);
   } catch (error) {
-    console.error("Failed to fetch number ", error);
     return NextResponse.json(
       { error: "Failed to fetch notes" },
       { status: 500 },

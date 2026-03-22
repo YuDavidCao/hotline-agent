@@ -28,7 +28,6 @@ export async function PATCH(
 
     return NextResponse.json(updated);
   } catch (err) {
-    console.error(err);
     return NextResponse.json(
       { error: "Failed to update resolved status" },
       { status: 500 },

@@ -149,9 +149,7 @@ export async function POST(req: Request) {
           recordingUrl,
         );
         if (!updated) {
-          console.warn(
-            `post_call_audio: no InboundCall row yet for ${conversationId}; recording saved at ${recordingUrl}`,
-          );
+          // recording saved but no InboundCall row yet for this conversationId
         }
       }
     }

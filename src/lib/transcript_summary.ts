@@ -4,8 +4,6 @@ import { openai } from '@ai-sdk/openai';
 
 export async function transcriptSummary(transcript: string) {
   try {
-
-    console.log(transcript);
     const { output } = await generateText({
       model: openai('gpt-4.1'),
       output: Output.object({
@@ -48,8 +46,6 @@ ${transcript}
     return output;
 
   } catch (error) {
-    console.error('Error generating transcript summary', error);
-
     // ✅ never crash webhook
     return {
       notes: [],

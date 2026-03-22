@@ -55,7 +55,6 @@ export async function GET(req: NextRequest) {
       },
     })
   } catch (err) {
-    console.error("Audio proxy error:", err)
     return NextResponse.json({ error: "Failed to fetch audio" }, { status: 502 })
   }
 }
