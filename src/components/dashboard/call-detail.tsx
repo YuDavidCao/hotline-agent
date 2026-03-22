@@ -156,6 +156,11 @@ function AudioPlayer({
     audio.addEventListener("loadedmetadata", onMeta)
     audio.addEventListener("ended", onEnded)
 
+    // Metadata may have already loaded (e.g. cached audio on page refresh)
+    if (audio.readyState >= HTMLMediaElement.HAVE_METADATA) {
+      setDuration(audio.duration)
+    }
+
     if (!audio.paused) onPlay()
 
     return () => {

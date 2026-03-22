@@ -115,13 +115,12 @@ export async function POST(req: Request) {
       const data = event.data;
       if (data.conversation_id) {
         const call = mapPostCallTranscriptionToMyCallData(data);
-        const [summaryResult, pendingRecording] =
-          await Promise.all([
-            transcriptSummary(call.transcript),
-            getStoredRecordingRelativeUrlIfExists(call.call_id).then(
-              (r) => r ?? "",
-            ),
-          ]);
+        const summaryResult = await transcriptSummary(call.transcript);
+        // Check for audio AFTER transcriptSummary, so post_call_audio has had
+        // time to save the file. If it still hasn't arrived, updateInboundCallRecordingUrl
+        // will update the row once the audio webhook fires.
+        const pendingRecording =
+          (await getStoredRecordingRelativeUrlIfExists(call.call_id)) ?? "";
 
         const { notes, severity } = summaryResult!;
         await saveInboundCallToDB({
