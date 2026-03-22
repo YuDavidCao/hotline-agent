@@ -337,8 +337,6 @@ export function CallDetail({ call }: { call: FullCall }) {
     <div className="grid gap-6 lg:grid-cols-[1fr_20rem]">
       <CallTranscriptView
         entry={entry}
-        risk={[]}
-        negation={[]}
         onBack={() => router.back()}
         currentTime={playbackTime}
         captions={captions}

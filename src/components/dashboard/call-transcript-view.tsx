@@ -8,9 +8,8 @@ import {
   severityBadgeClass,
   type DashboardCallEntry,
 } from "@/lib/dashboard-mock"
-import type { HighRiskPhrase, NegationPhrase } from "@/lib/risk-annotations"
 import type { TimedCaption } from "@/lib/word-alignment"
-import { AnnotatedTranscriptTurns } from "./annotated-transcript"
+import { TranscriptTurns } from "./transcript-turns"
 
 function formatMetaRange(entry: DashboardCallEntry) {
   const start = new Date(entry.startTimestamp)
@@ -40,16 +39,12 @@ function activeTurnFromCaptions(
 
 export function CallTranscriptView({
   entry,
-  risk,
-  negation,
   onBack,
   currentTime,
   captions,
   audioSlot,
 }: {
   entry: DashboardCallEntry
-  risk: HighRiskPhrase[]
-  negation: NegationPhrase[]
   onBack: () => void
   currentTime?: number
   captions?: TimedCaption[]
@@ -145,23 +140,13 @@ export function CallTranscriptView({
             Transcript
           </h3>
           <p className="mt-0.5 text-sm text-muted-foreground">
-            Matched phrases are{" "}
-            <span className="underline decoration-destructive decoration-2 underline-offset-4">
-              risk
-            </span>{" "}
-            (red) or{" "}
-            <span className="underline decoration-secondary decoration-2 underline-offset-4">
-              de-escalation
-            </span>{" "}
-            (green). Hover for details.
+            The current phrase follows audio playback.
           </p>
         </div>
         <ScrollArea className="max-h-[min(36rem,60vh)]">
           <div className="p-5">
-            <AnnotatedTranscriptTurns
+            <TranscriptTurns
               turns={entry.transcriptObject}
-              risk={risk}
-              negation={negation}
               activeTurnIndex={activeTurn}
               turnRefs={turnRefs}
               currentTime={currentTime}
