@@ -100,6 +100,13 @@ export async function analyzeUserSentiment(
   try {
     conn = await getConnection()
 
+    // Ensure warehouse is active (connection-level option may not apply)
+    const warehouse = process.env.SNOWFLAKE_WAREHOUSE
+    if (warehouse) {
+      const safe = warehouse.replace(/"/g, '""')
+      await executeQuery(conn, `USE WAREHOUSE "${safe}"`, [])
+    }
+
     const placeholders = userLines.map((_, i) => `(?)`).join(", ")
     const sql = `
       SELECT column1 AS line_text,
