@@ -113,12 +113,12 @@ export function CallTranscriptView({
           <span
             className={cn(
               "rounded-sm px-2 py-0.5 text-[11px] font-semibold tabular-nums",
-              entry.severityScore > 70
+              entry.severityScore >= 7
                 ? "bg-destructive/15 text-destructive"
                 : "bg-muted text-muted-foreground"
             )}
           >
-            Score {entry.severityScore}/100
+            Severity {entry.severityScore}/10
           </span>
           <span className="text-sm text-muted-foreground">
             {entry.direction} · {Math.round(entry.durationMs / 1000)}s

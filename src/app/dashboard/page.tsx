@@ -60,6 +60,9 @@ export default async function DashboardPage() {
   const totalDurationMs = calls.reduce((sum, call) => sum + call.duration, 0)
   const averageDurationMs = totalCalls > 0 ? Math.round(totalDurationMs / totalCalls) : 0
 
+  const resolvedCount = calls.filter((call) => call.resolved).length
+  const unresolvedCount = totalCalls - resolvedCount
+
   const lowSeverityCount = calls.filter((call) => call.severity <= 3).length
   const mediumSeverityCount = calls.filter(
     (call) => call.severity > 3 && call.severity < 6,
@@ -101,10 +104,32 @@ export default async function DashboardPage() {
             </div>
 
             <div className="rounded-sm border border-border bg-muted/30 p-3">
+              <p className="text-xs text-muted-foreground">Resolution status</p>
+              <ul className="mt-2 space-y-1.5 text-sm">
+                <li className="flex items-center justify-between gap-2">
+                  <span className="text-red-500">
+                    Unresolved
+                  </span>
+                  <span className="font-semibold tabular-nums">
+                    {unresolvedCount}
+                  </span>
+                </li>
+                <li className="flex items-center justify-between gap-2">
+                  <span className="text-emerald-600 dark:text-emerald-500">
+                    Resolved
+                  </span>
+                  <span className="font-semibold tabular-nums">
+                    {resolvedCount}
+                  </span>
+                </li>
+              </ul>
+            </div>
+
+            <div className="rounded-sm border border-border bg-muted/30 p-3">
               <p className="text-xs text-muted-foreground">Severity categories</p>
               <ul className="mt-2 space-y-1.5 text-sm">
                 <li className="flex items-center justify-between gap-2">
-                  <span className="text-green-500">Low (1-3)</span>
+                  <span className="text-emerald-600 dark:text-emerald-500">Low (1-3)</span>
                   <span className="font-semibold tabular-nums">{lowSeverityCount}</span>
                 </li>
                 <li className="flex items-center justify-between gap-2">
