@@ -10,6 +10,14 @@ export const metadata: Metadata = {
   description: "Review call transcripts and session activity.",
 }
 
+function formatDuration(ms: number): string {
+  const totalSeconds = Math.floor(ms / 1000)
+  const minutes = Math.floor(totalSeconds / 60)
+  const seconds = totalSeconds % 60
+  if (minutes === 0) return `${seconds}s`
+  return `${minutes}m ${seconds}s`
+}
+
 export default async function DashboardPage() {
   const session = await auth()
 
@@ -46,6 +54,16 @@ export default async function DashboardPage() {
     recordingURL: c.recordingURL,
   }))
 
+  const totalCalls = calls.length
+  const totalDurationMs = calls.reduce((sum, call) => sum + call.duration, 0)
+  const averageDurationMs = totalCalls > 0 ? Math.round(totalDurationMs / totalCalls) : 0
+
+  const lowSeverityCount = calls.filter((call) => call.severity <= 3).length
+  const mediumSeverityCount = calls.filter(
+    (call) => call.severity > 3 && call.severity < 6,
+  ).length
+  const highSeverityCount = calls.filter((call) => call.severity >= 6).length
+
   return (
     <div className="flex flex-col gap-8">
       <div>
@@ -57,24 +75,62 @@ export default async function DashboardPage() {
         </p>
       </div>
 
-      <Card className="overflow-hidden p-0">
-        <div className="border-b border-border bg-muted/40 px-6 py-4">
-          <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <h2 className="text-lg font-semibold text-foreground">Calls</h2>
-              <p className="text-sm text-muted-foreground mt-0.5">
-                Inbound calls — most recent first.
+      <div className="grid gap-6 lg:grid-cols-[18rem_minmax(0,1fr)] lg:items-start">
+        <Card className="overflow-hidden p-0">
+          <div className="border-b border-border bg-muted/40 px-4 py-3">
+            <h2 className="text-sm font-semibold text-foreground">Call Stats</h2>
+            <p className="mt-0.5 text-xs text-muted-foreground">
+              Current snapshot
+            </p>
+          </div>
+          <div className="space-y-3 p-4">
+            <div className="rounded-sm border border-border bg-muted/30 p-3">
+              <p className="text-xs text-muted-foreground">Total calls</p>
+              <p className="mt-1 text-2xl font-semibold text-foreground tabular-nums">
+                {totalCalls}
               </p>
             </div>
-            <span className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground whitespace-nowrap">
-              {calls.length} total
-            </span>
+
+            <div className="rounded-sm border border-border bg-muted/30 p-3">
+              <p className="text-xs text-muted-foreground">Average call time</p>
+              <p className="mt-1 text-2xl font-semibold text-foreground tabular-nums">
+                {formatDuration(averageDurationMs)}
+              </p>
+            </div>
+
+            <div className="rounded-sm border border-border bg-muted/30 p-3">
+              <p className="text-xs text-muted-foreground">Severity categories</p>
+              <ul className="mt-2 space-y-1.5 text-sm">
+                <li className="flex items-center justify-between gap-2">
+                  <span className="text-green-500">Low (1-3)</span>
+                  <span className="font-semibold tabular-nums">{lowSeverityCount}</span>
+                </li>
+                <li className="flex items-center justify-between gap-2">
+                  <span className="text-yellow-500">Medium (4-5)</span>
+                  <span className="font-semibold tabular-nums">{mediumSeverityCount}</span>
+                </li>
+                <li className="flex items-center justify-between gap-2">
+                  <span className="text-red-500">High (6-10)</span>
+                  <span className="font-semibold tabular-nums">{highSeverityCount}</span>
+                </li>
+              </ul>
+            </div>
           </div>
-        </div>
-        <div className="p-4">
-          <CallsTable calls={calls} />
-        </div>
-      </Card>
+        </Card>
+
+        <Card className="overflow-hidden p-0">
+          <div className="border-b border-border bg-muted/40 px-6 py-4">
+            <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <h2 className="text-lg font-semibold text-foreground">Calls</h2>
+              </div>
+            </div>
+          </div>
+          <div className="p-4">
+            <CallsTable calls={calls} />
+          </div>
+        </Card>
+      </div>
     </div>
   )
 }

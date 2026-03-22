@@ -27,6 +27,7 @@ export async function saveInboundCallToDB(callData: MyCallData) {
         direction: prismaData.direction,
         notes: prismaData.notes,
         severity: prismaData.severity,
+        resolved: prismaData.resolved
       },
       create: prismaData,
     });
@@ -73,5 +74,6 @@ function mapCallDataToPrisma(
     direction: callData.direction,
     notes: toJsonInput(callData.notes),
     severity: callData.severity,
+    resolved: callData.resolved
   };
 }

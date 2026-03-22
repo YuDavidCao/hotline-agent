@@ -21,5 +21,6 @@ export interface MyCallData {
     reason: string;
   }[];
   severity: number;
+  resolved: boolean; 
   [key: string]: unknown;
 }

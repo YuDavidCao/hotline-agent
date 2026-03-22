@@ -173,6 +173,22 @@ function ActionsCell({ call }: { call: CallRow }) {
 
 type SortKey = "startTime" | "endTime" | "fromNumber" | "duration" | "severity"
 type SortDir = "asc" | "desc"
+type TimeFilter = "all" | "past24h" | "past7d" | "past30d"
+type SeverityFilter = "all" | "low" | "medium" | "high"
+
+const TIME_FILTER_LABEL: Record<TimeFilter, string> = {
+  all: "All time",
+  past24h: "Past 24 hours",
+  past7d: "Past week",
+  past30d: "Past month",
+}
+
+const SEVERITY_FILTER_LABEL: Record<SeverityFilter, string> = {
+  all: "All severity",
+  low: "Low (1-3)",
+  medium: "Medium (4-5)",
+  high: "High (6-10)",
+}
 
 function sortCalls(calls: CallRow[], key: SortKey, dir: SortDir): CallRow[] {
   return [...calls].sort((a, b) => {
@@ -240,10 +256,79 @@ function SortTh({
   )
 }
 
+function FilterDropdown<T extends string>({
+  label,
+  value,
+  options,
+  onChange,
+}: {
+  label: string
+  value: T
+  options: { value: T; label: string }[]
+  onChange: (value: T) => void
+}) {
+  const selectedLabel = options.find((option) => option.value === value)?.label ?? ""
+
+  return (
+    <div className="flex flex-col gap-1">
+      <span className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
+        {label}
+      </span>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <button
+            type="button"
+            className={cn(
+              "inline-flex h-9 w-full items-center justify-between rounded-sm border border-border bg-input/30 px-3 text-sm text-foreground outline-none transition-colors",
+              "hover:bg-input/50",
+              "focus-visible:ring-2 focus-visible:ring-ring"
+            )}
+          >
+            <span className="truncate">{selectedLabel}</span>
+            <svg
+              className="ml-2 h-3.5 w-3.5 shrink-0 text-muted-foreground"
+              viewBox="0 0 16 16"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+            >
+              <path d="M4 6l4 4 4-4" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="start" className="min-w-[12rem]">
+          {options.map((option) => (
+            <DropdownMenuItem
+              key={option.value}
+              className="cursor-pointer flex items-center justify-between"
+              onClick={() => onChange(option.value)}
+            >
+              <span>{option.label}</span>
+              {value === option.value ? (
+                <svg
+                  className="h-3.5 w-3.5 text-foreground"
+                  viewBox="0 0 16 16"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                >
+                  <path d="M3.5 8.5l2.5 2.5 6-6" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              ) : null}
+            </DropdownMenuItem>
+          ))}
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </div>
+  )
+}
+
 export function CallsTable({ calls }: { calls: CallRow[] }) {
   const [sortKey, setSortKey] = React.useState<SortKey>("startTime")
   const [sortDir, setSortDir] = React.useState<SortDir>("desc")
   const [query, setQuery] = React.useState("")
+  const [timeFilter, setTimeFilter] = React.useState<TimeFilter>("all")
+  const [severityFilter, setSeverityFilter] = React.useState<SeverityFilter>("all")
 
   const handleSort = (key: SortKey) => {
     if (key === sortKey) {
@@ -256,14 +341,29 @@ export function CallsTable({ calls }: { calls: CallRow[] }) {
 
   const filtered = React.useMemo(() => {
     const q = query.trim().toLowerCase()
-    if (!q) return calls
+    const now = Date.now()
+
     return calls.filter((c) => {
+      if (timeFilter !== "all") {
+        const msAgo = now - c.startTime
+        if (timeFilter === "past24h" && msAgo > 24 * 60 * 60 * 1000) return false
+        if (timeFilter === "past7d" && msAgo > 7 * 24 * 60 * 60 * 1000) return false
+        if (timeFilter === "past30d" && msAgo > 30 * 24 * 60 * 60 * 1000) return false
+      }
+
+      if (severityFilter !== "all") {
+        if (severityFilter === "low" && !(c.severity <= 3)) return false
+        if (severityFilter === "medium" && !(c.severity > 3 && c.severity < 6)) return false
+        if (severityFilter === "high" && !(c.severity >= 6)) return false
+      }
+
+      if (!q) return true
       if (c.fromNumber.toLowerCase().includes(q)) return true
       if (c.transcript.toLowerCase().includes(q)) return true
       if (c.notes.some((n) => n.note.toLowerCase().includes(q) || n.reason.toLowerCase().includes(q))) return true
       return false
     })
-  }, [calls, query])
+  }, [calls, query, timeFilter, severityFilter])
 
   const sorted = sortCalls(filtered, sortKey, sortDir)
 
@@ -280,33 +380,59 @@ export function CallsTable({ calls }: { calls: CallRow[] }) {
 
   return (
     <div className="flex flex-col gap-3">
-      <div className="relative">
-        <svg
-          className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground"
-          viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.8"
-        >
-          <circle cx="6.5" cy="6.5" r="4" />
-          <path d="M10 10l3 3" strokeLinecap="round" />
-        </svg>
-        <InputBase
-          type="text"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          placeholder="Search by phone number, transcript, or notes…"
-          className="pl-9 pr-8"
-        />
-        {query && (
-          <button
-            type="button"
-            onClick={() => setQuery("")}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
-            aria-label="Clear search"
+      <div className="grid gap-2 rounded-sm border border-border bg-muted/20 p-2 sm:grid-cols-[minmax(0,1fr)_12rem_12rem] sm:items-end">
+        <div className="relative">
+          <svg
+            className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground"
+            viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.8"
           >
-            <svg className="h-3.5 w-3.5" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M3 3l10 10M13 3L3 13" strokeLinecap="round" />
-            </svg>
-          </button>
-        )}
+            <circle cx="6.5" cy="6.5" r="4" />
+            <path d="M10 10l3 3" strokeLinecap="round" />
+          </svg>
+          <InputBase
+            type="text"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Search by phone number, transcript, or notes…"
+            className="pl-9 pr-8"
+          />
+          {query && (
+            <button
+              type="button"
+              onClick={() => setQuery("")}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+              aria-label="Clear search"
+            >
+              <svg className="h-3.5 w-3.5" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M3 3l10 10M13 3L3 13" strokeLinecap="round" />
+              </svg>
+            </button>
+          )}
+        </div>
+
+        <FilterDropdown
+          label="Timeframe"
+          value={timeFilter}
+          onChange={setTimeFilter}
+          options={[
+            { value: "all", label: TIME_FILTER_LABEL.all },
+            { value: "past24h", label: TIME_FILTER_LABEL.past24h },
+            { value: "past7d", label: TIME_FILTER_LABEL.past7d },
+            { value: "past30d", label: TIME_FILTER_LABEL.past30d },
+          ]}
+        />
+
+        <FilterDropdown
+          label="Severity"
+          value={severityFilter}
+          onChange={setSeverityFilter}
+          options={[
+            { value: "all", label: SEVERITY_FILTER_LABEL.all },
+            { value: "low", label: SEVERITY_FILTER_LABEL.low },
+            { value: "medium", label: SEVERITY_FILTER_LABEL.medium },
+            { value: "high", label: SEVERITY_FILTER_LABEL.high },
+          ]}
+        />
       </div>
       <div className="overflow-x-auto">
       <table className="w-full min-w-[900px] text-sm border-collapse">
@@ -376,7 +502,7 @@ export function CallsTable({ calls }: { calls: CallRow[] }) {
       </table>
       {sorted.length === 0 && (
         <div className="py-12 text-center text-sm text-muted-foreground">
-          No calls match <span className="font-medium text-foreground">&ldquo;{query}&rdquo;</span>.
+          No calls match the current filters.
         </div>
       )}
     </div>
