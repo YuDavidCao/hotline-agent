@@ -31,7 +31,6 @@ export interface FullCall {
   direction: string
   notes: { note: string; reason: string }[]
   severity: number
-  sentimentScore: number
 }
 
 function formatTime(seconds: number): string {
@@ -329,7 +328,6 @@ export function CallDetail({ call }: { call: FullCall }) {
         risk={[]}
         negation={[]}
         onBack={() => router.back()}
-        sentimentScore={call.sentimentScore}
         currentTime={playbackTime}
         captions={captions}
         audioSlot={
