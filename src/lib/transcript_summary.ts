@@ -18,12 +18,15 @@ export async function transcriptSummary(transcript: string) {
         }),
       }),
       prompt: `
-You are analyzing a call transcript between a user and a suicide hotline agent.
+You are analyzing a call transcript between a caller and a suicide hotline agent.
 
-Task:
-- Extract the most important notes from the transcript.
-- For each note, include a short reason explaining why it matters.
-- Provide an overall severity score from 1 to 10.
+Output rules:
+- Return a small set of consolidated notes—typically 3 to 8 items. Err on fewer, higher-quality notes rather than many fragments.
+- Merge overlapping facts, repeated themes, and adjacent details into one note. Do not create a separate note for every sentence or turn of speech.
+- Each note must synthesize a theme, risk factor, protective factor, or clinically relevant pattern drawn from multiple parts of the conversation when the transcript supports it. Avoid notes that restate a single isolated sentence or one-off remark unless it is uniquely critical (e.g., explicit plan or means).
+- Each reason should state why that theme matters for safety, follow-up, or supervision—not a duplicate of the note text.
+
+Severity (1–10): reflect imminent risk, hopelessness, access to means, substance use, isolation, and similar factors consistent with crisis-line assessment.
 
 Transcript:
 ${transcript}
