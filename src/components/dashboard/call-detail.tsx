@@ -31,7 +31,6 @@ export interface FullCall {
   direction: string
   notes: { note: string; reason: string }[]
   severity: number
-  sentimentScore: number
 }
 
 function formatTime(seconds: number): string {
@@ -111,6 +110,7 @@ function AudioPlayer({
   onTimeUpdate?: (time: number, captions: TimedCaption[]) => void
 }) {
   const audioRef = React.useRef<HTMLAudioElement>(null)
+  const pendingSeekRef = React.useRef<number | null>(null)
   const [playing, setPlaying] = React.useState(false)
   const [currentTime, setCurrentTime] = React.useState(0)
   const [duration, setDuration] = React.useState(0)
@@ -157,6 +157,11 @@ function AudioPlayer({
     audio.addEventListener("loadedmetadata", onMeta)
     audio.addEventListener("ended", onEnded)
 
+    // Metadata may have already loaded (e.g. cached audio on page refresh)
+    if (audio.readyState >= HTMLMediaElement.HAVE_METADATA) {
+      setDuration(audio.duration)
+    }
+
     if (!audio.paused) onPlay()
 
     return () => {
@@ -174,6 +179,10 @@ function AudioPlayer({
     if (playing) {
       audio.pause()
     } else {
+      if (pendingSeekRef.current !== null) {
+        audio.currentTime = pendingSeekRef.current
+        pendingSeekRef.current = null
+      }
       audio.play()
     }
     setPlaying(!playing)
@@ -182,7 +191,9 @@ function AudioPlayer({
   const seek = (time: number) => {
     const audio = audioRef.current
     if (!audio) return
+    pendingSeekRef.current = time
     audio.currentTime = time
+    setCurrentTime(time)
   }
 
   const seekBar = (e: React.MouseEvent<HTMLDivElement>) => {
@@ -329,7 +340,6 @@ export function CallDetail({ call }: { call: FullCall }) {
         risk={[]}
         negation={[]}
         onBack={() => router.back()}
-        sentimentScore={call.sentimentScore}
         currentTime={playbackTime}
         captions={captions}
         audioSlot={
