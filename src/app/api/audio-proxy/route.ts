@@ -12,14 +12,16 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "Missing url parameter" }, { status: 400 })
   }
 
+  let resolvedUrl: string
   try {
-    new URL(url)
+    // Resolve relative URLs (e.g. /api/recordings/...) against the request origin.
+    resolvedUrl = new URL(url, req.nextUrl.origin).toString()
   } catch {
     return NextResponse.json({ error: "Invalid url" }, { status: 400 })
   }
 
   try {
-    const upstream = await fetch(url)
+    const upstream = await fetch(resolvedUrl)
 
     if (!upstream.ok) {
       return NextResponse.json(

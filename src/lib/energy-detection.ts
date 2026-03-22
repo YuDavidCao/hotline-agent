@@ -9,7 +9,7 @@ export interface SpeechSegment {
   end: number
 }
 
-export interface DetectionOptions {
+interface DetectionOptions {
   /** Size of the rectangular smoothing window (in samples). Default: 4 */
   smoothingWindow?: number
   /** Threshold as a fraction of the max smoothed energy. Default: 0.05 */

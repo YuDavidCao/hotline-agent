@@ -3,7 +3,7 @@
  * Replace with Prisma/API data when wired.
  */
 
-export type TranscriptRole = "agent" | "user"
+type TranscriptRole = "agent" | "user"
 
 export type TranscriptTurn = {
   role: TranscriptRole

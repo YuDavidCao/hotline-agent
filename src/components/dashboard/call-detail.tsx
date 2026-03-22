@@ -31,7 +31,6 @@ export interface FullCall {
   direction: string
   notes: { note: string; reason: string }[]
   severity: number
-  sentimentScore: number
 }
 
 function formatTime(seconds: number): string {
@@ -156,6 +155,11 @@ function AudioPlayer({
     audio.addEventListener("pause", onPause)
     audio.addEventListener("loadedmetadata", onMeta)
     audio.addEventListener("ended", onEnded)
+
+    // Metadata may have already loaded (e.g. cached audio on page refresh)
+    if (audio.readyState >= HTMLMediaElement.HAVE_METADATA) {
+      setDuration(audio.duration)
+    }
 
     if (!audio.paused) onPlay()
 
@@ -329,7 +333,6 @@ export function CallDetail({ call }: { call: FullCall }) {
         risk={[]}
         negation={[]}
         onBack={() => router.back()}
-        sentimentScore={call.sentimentScore}
         currentTime={playbackTime}
         captions={captions}
         audioSlot={

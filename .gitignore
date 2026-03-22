@@ -19,6 +19,8 @@
 # misc
 .DS_Store
 *.pem
+rsa_key.p8
+rsa_key.pub
 
 # debug
 npm-debug.log*

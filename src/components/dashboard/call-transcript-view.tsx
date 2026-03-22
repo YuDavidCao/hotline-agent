@@ -43,7 +43,6 @@ export function CallTranscriptView({
   risk,
   negation,
   onBack,
-  sentimentScore,
   currentTime,
   captions,
   audioSlot,
@@ -52,7 +51,6 @@ export function CallTranscriptView({
   risk: HighRiskPhrase[]
   negation: NegationPhrase[]
   onBack: () => void
-  sentimentScore?: number
   currentTime?: number
   captions?: TimedCaption[]
   audioSlot?: React.ReactNode
@@ -122,20 +120,6 @@ export function CallTranscriptView({
           >
             Score {entry.severityScore}/100
           </span>
-          {sentimentScore !== undefined && sentimentScore > 0 && (
-            <span
-              className={cn(
-                "rounded-sm border px-2 py-0.5 text-[11px] font-semibold tabular-nums",
-                sentimentScore >= 70
-                  ? "bg-destructive/15 text-destructive border-destructive/30"
-                  : sentimentScore >= 40
-                    ? "bg-amber-500/15 text-amber-200 border-amber-500/35"
-                    : "bg-green-500/10 text-green-400 border-green-500/30"
-              )}
-            >
-              Sentiment {sentimentScore}/100
-            </span>
-          )}
           <span className="text-sm text-muted-foreground">
             {entry.direction} · {Math.round(entry.durationMs / 1000)}s
           </span>

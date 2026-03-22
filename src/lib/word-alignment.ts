@@ -27,7 +27,7 @@ interface WordEntry {
 /**
  * Parses the raw "Agent: ...\nUser: ..." transcript into structured turns.
  */
-export function parseTranscriptTurns(transcript: string): TranscriptTurn[] {
+function parseTranscriptTurns(transcript: string): TranscriptTurn[] {
   const turns: TranscriptTurn[] = []
   for (const line of transcript.split("\n")) {
     const t = line.trim()
