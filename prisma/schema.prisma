@@ -73,4 +73,5 @@ model InboundCall {
   notes Json
   severity Int
   resolved Boolean @default(false)
+  sentimentScore Int @default(0)
 }

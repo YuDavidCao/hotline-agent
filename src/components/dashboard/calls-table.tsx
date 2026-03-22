@@ -26,6 +26,7 @@ export interface CallRow {
   fromNumber: string
   transcript: string
   severity: number
+  sentimentScore: number
   notes: Note[]
   recordingURL: string
 }
@@ -57,6 +58,12 @@ function transcriptPreview(transcript: string): string {
 function severityClass(severity: number): string {
   if (severity <= 3) return "bg-green-500/10 text-green-700 border-green-500/30 dark:text-green-400"
   if (severity < 6) return "bg-yellow-500/10 text-yellow-700 border-yellow-500/30 dark:text-yellow-400"
+  return "bg-red-500/10 text-red-700 border-red-500/30 dark:text-red-400"
+}
+
+function sentimentClass(score: number): string {
+  if (score < 40) return "bg-green-500/10 text-green-700 border-green-500/30 dark:text-green-400"
+  if (score < 70) return "bg-yellow-500/10 text-yellow-700 border-yellow-500/30 dark:text-yellow-400"
   return "bg-red-500/10 text-red-700 border-red-500/30 dark:text-red-400"
 }
 
@@ -171,7 +178,7 @@ function ActionsCell({ call }: { call: CallRow }) {
   )
 }
 
-type SortKey = "startTime" | "endTime" | "fromNumber" | "duration" | "severity"
+type SortKey = "startTime" | "endTime" | "fromNumber" | "duration" | "severity" | "sentimentScore"
 type SortDir = "asc" | "desc"
 type TimeFilter = "all" | "past24h" | "past7d" | "past30d"
 type SeverityFilter = "all" | "low" | "medium" | "high"
@@ -446,6 +453,7 @@ export function CallsTable({ calls }: { calls: CallRow[] }) {
               Transcript
             </th>
             <SortTh label="Severity" sortKey="severity" current={sortKey} dir={sortDir} onSort={handleSort} className="whitespace-nowrap" />
+            <SortTh label="Sentiment" sortKey="sentimentScore" current={sortKey} dir={sortDir} onSort={handleSort} className="whitespace-nowrap" />
             <th className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
               Notes
             </th>
@@ -488,6 +496,16 @@ export function CallsTable({ calls }: { calls: CallRow[] }) {
                   )}
                 >
                   {call.severity}
+                </span>
+              </td>
+              <td className="px-4 py-3 whitespace-nowrap">
+                <span
+                  className={cn(
+                    "rounded-sm border px-2 py-0.5 text-[11px] font-semibold",
+                    sentimentClass(call.sentimentScore),
+                  )}
+                >
+                  {call.sentimentScore}
                 </span>
               </td>
               <td className="px-4 py-3">
