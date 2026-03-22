@@ -42,6 +42,8 @@ function formatTime(seconds: number): string {
 interface AudioAnalysis {
   samples: Float32Array
   sampleRate: number
+  /** Duration from decoded buffer — available before <audio> loadedmetadata on cold reload. */
+  decodedDurationSec: number
   segments: SpeechSegment[]
   captions: TimedCaption[]
 }
@@ -82,7 +84,13 @@ function useAudioAnalysis(
         const captions = alignWordsToSegments(transcript, segments)
 
         if (!cancelled) {
-          setAnalysis({ samples, sampleRate, segments, captions })
+          setAnalysis({
+            samples,
+            sampleRate,
+            decodedDurationSec: audioBuffer.duration,
+            segments,
+            captions,
+          })
         }
       } catch (err) {
         if (!cancelled) {
@@ -116,6 +124,10 @@ function AudioPlayer({
   const [duration, setDuration] = React.useState(0)
 
   const { analysis, loading, error } = useAudioAnalysis(src, transcript)
+
+  /** Prefer media element duration; fall back to decoded buffer when metadata is not ready yet. */
+  const effectiveDuration =
+    duration > 0 ? duration : (analysis?.decodedDurationSec ?? 0)
 
   // Push captions to parent as soon as analysis finishes
   React.useEffect(() => {
@@ -155,7 +167,14 @@ function AudioPlayer({
 
     const onPlay = () => { rafId = requestAnimationFrame(tick) }
     const onPause = () => { if (rafId !== null) cancelAnimationFrame(rafId) }
-    const onMeta = () => setDuration(audio.duration)
+    const onMeta = () => {
+      setDuration(audio.duration)
+      // Seek may have run before loadedmetadata (cold reload); apply now.
+      if (pendingSeekRef.current !== null) {
+        audio.currentTime = pendingSeekRef.current
+        setCurrentTime(audio.currentTime)
+      }
+    }
     const onEnded = () => setPlaying(false)
     const onSeeked = () => {
       const t = audio.currentTime
@@ -206,9 +225,17 @@ function AudioPlayer({
   const seek = (time: number) => {
     const audio = audioRef.current
     if (!audio) return
-    pendingSeekRef.current = time
-    audio.currentTime = time
-    setCurrentTime(time)
+    const maxT = effectiveDuration > 0 ? effectiveDuration : 0
+    const clamped = maxT > 0 ? Math.max(0, Math.min(time, maxT)) : Math.max(0, time)
+    pendingSeekRef.current = clamped
+    setCurrentTime(clamped)
+    const canSeekElement =
+      audio.readyState >= HTMLMediaElement.HAVE_METADATA &&
+      Number.isFinite(audio.duration) &&
+      audio.duration > 0
+    if (canSeekElement) {
+      audio.currentTime = clamped
+    }
   }
 
   const seekBar = (e: React.MouseEvent<HTMLDivElement>) => {
@@ -218,7 +245,8 @@ function AudioPlayer({
     seek(ratio * duration)
   }
 
-  const progress = duration > 0 ? (currentTime / duration) * 100 : 0
+  const progress =
+    effectiveDuration > 0 ? (currentTime / effectiveDuration) * 100 : 0
 
   return (
     <Card className="overflow-hidden p-0">
@@ -232,7 +260,7 @@ function AudioPlayer({
           <AudioWaveform
             samples={analysis.samples}
             sampleRate={analysis.sampleRate}
-            duration={duration}
+            duration={effectiveDuration}
             currentTime={currentTime}
             segments={analysis.segments}
             captions={analysis.captions}
@@ -289,7 +317,9 @@ function AudioPlayer({
             )}
             <div className="flex justify-between text-[11px] tabular-nums text-muted-foreground">
               <span>{formatTime(currentTime)}</span>
-              <span>{duration > 0 ? formatTime(duration) : "--:--"}</span>
+              <span>
+                {effectiveDuration > 0 ? formatTime(effectiveDuration) : "--:--"}
+              </span>
             </div>
           </div>
         </div>
