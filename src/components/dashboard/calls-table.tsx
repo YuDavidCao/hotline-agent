@@ -27,6 +27,7 @@ export interface CallRow {
   transcript: string
   severity: number
   sentimentScore: number
+  resolved: boolean
   notes: Note[]
   recordingURL: string
 }
@@ -35,7 +36,6 @@ function formatDateTime(ts: number): string {
   return new Date(ts).toLocaleString(undefined, {
     month: "short",
     day: "numeric",
-    year: "numeric",
     hour: "2-digit",
     minute: "2-digit",
   })
@@ -47,12 +47,6 @@ function formatDuration(ms: number): string {
   const seconds = totalSeconds % 60
   if (minutes === 0) return `${seconds}s`
   return `${minutes}m ${seconds}s`
-}
-
-function transcriptPreview(transcript: string): string {
-  const trimmed = transcript.trim()
-  if (trimmed.length <= 50) return trimmed
-  return trimmed.slice(0, 50) + "..."
 }
 
 function severityClass(severity: number): string {
@@ -123,7 +117,15 @@ function NotesCell({ notes }: { notes: Note[] }) {
   )
 }
 
-function ActionsCell({ call }: { call: CallRow }) {
+function ActionsCell({
+  call,
+  resolved,
+  onToggleResolved,
+}: {
+  call: CallRow
+  resolved: boolean
+  onToggleResolved: (callId: string, nextResolved: boolean) => Promise<void>
+}) {
   const router = useRouter()
   return (
     <DropdownMenu>
@@ -131,20 +133,20 @@ function ActionsCell({ call }: { call: CallRow }) {
         <button
           type="button"
           className={cn(
-            "inline-flex h-7 items-center gap-1 rounded-sm border border-border bg-background px-2.5 text-xs font-medium outline-none transition-colors",
+            "inline-flex h-7 w-7 items-center justify-center rounded-sm border border-border bg-background text-xs font-medium outline-none transition-colors",
             "hover:bg-accent hover:text-accent-foreground",
             "focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1"
           )}
+          aria-label="Call actions"
         >
-          Actions
           <svg
-            className="h-3 w-3 shrink-0"
+            className="h-3.5 w-3.5 shrink-0"
             viewBox="0 0 16 16"
             fill="none"
             stroke="currentColor"
-            strokeWidth="2"
+            strokeWidth="1.8"
           >
-            <path d="M4 6l4 4 4-4" strokeLinecap="round" strokeLinejoin="round" />
+            <path d="M2.5 4h11M2.5 8h11M2.5 12h11" strokeLinecap="round" />
           </svg>
         </button>
       </DropdownMenuTrigger>
@@ -162,6 +164,12 @@ function ActionsCell({ call }: { call: CallRow }) {
           }}
         >
           Track this number
+        </DropdownMenuItem>
+        <DropdownMenuItem
+          className="cursor-pointer"
+          onClick={() => onToggleResolved(call.callId, !resolved)}
+        >
+          {resolved ? "Mark unresolved" : "Resolve"}
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem
@@ -336,6 +344,29 @@ export function CallsTable({ calls }: { calls: CallRow[] }) {
   const [query, setQuery] = React.useState("")
   const [timeFilter, setTimeFilter] = React.useState<TimeFilter>("all")
   const [severityFilter, setSeverityFilter] = React.useState<SeverityFilter>("all")
+  const [resolvedByCallId, setResolvedByCallId] = React.useState<Record<string, boolean>>({})
+
+  const handleToggleResolved = React.useCallback(
+    async (callId: string, nextResolved: boolean) => {
+      setResolvedByCallId((prev) => ({ ...prev, [callId]: nextResolved }))
+
+      try {
+        const res = await fetch(`/api/resolved/${encodeURIComponent(callId)}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ resolved: nextResolved }),
+        })
+
+        if (!res.ok) {
+          throw new Error("Failed to update resolved state")
+        }
+      } catch (error) {
+        setResolvedByCallId((prev) => ({ ...prev, [callId]: !nextResolved }))
+        console.error(error)
+      }
+    },
+    [],
+  )
 
   const handleSort = (key: SortKey) => {
     if (key === sortKey) {
@@ -366,7 +397,6 @@ export function CallsTable({ calls }: { calls: CallRow[] }) {
 
       if (!q) return true
       if (c.fromNumber.toLowerCase().includes(q)) return true
-      if (c.transcript.toLowerCase().includes(q)) return true
       if (c.notes.some((n) => n.note.toLowerCase().includes(q) || n.reason.toLowerCase().includes(q))) return true
       return false
     })
@@ -400,7 +430,7 @@ export function CallsTable({ calls }: { calls: CallRow[] }) {
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search by phone number, transcript, or notes…"
+            placeholder="Search by phone number or notes…"
             className="pl-9 pr-8"
           />
           {query && (
@@ -442,16 +472,13 @@ export function CallsTable({ calls }: { calls: CallRow[] }) {
         />
       </div>
       <div className="overflow-x-auto">
-      <table className="w-full min-w-[900px] text-sm border-collapse">
+      <table className="w-full min-w-[760px] text-sm border-collapse">
         <thead>
           <tr className="border-b border-border bg-muted/40">
             <SortTh label="Start" sortKey="startTime" current={sortKey} dir={sortDir} onSort={handleSort} className="whitespace-nowrap" />
             <SortTh label="End" sortKey="endTime" current={sortKey} dir={sortDir} onSort={handleSort} className="whitespace-nowrap" />
             <SortTh label="From" sortKey="fromNumber" current={sortKey} dir={sortDir} onSort={handleSort} className="whitespace-nowrap" />
             <SortTh label="Duration" sortKey="duration" current={sortKey} dir={sortDir} onSort={handleSort} className="whitespace-nowrap" />
-            <th className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-              Transcript
-            </th>
             <SortTh label="Severity" sortKey="severity" current={sortKey} dir={sortDir} onSort={handleSort} className="whitespace-nowrap" />
             <SortTh label="Sentiment" sortKey="sentimentScore" current={sortKey} dir={sortDir} onSort={handleSort} className="whitespace-nowrap" />
             <th className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
@@ -484,9 +511,6 @@ export function CallsTable({ calls }: { calls: CallRow[] }) {
               <td className="px-4 py-3 whitespace-nowrap text-foreground">
                 {formatDuration(call.duration)}
               </td>
-              <td className="px-4 py-3 max-w-[220px] text-muted-foreground">
-                {transcriptPreview(call.transcript)}
-              </td>
               <td className="px-4 py-3 whitespace-nowrap">
                 <span
                   className={cn(
@@ -512,7 +536,11 @@ export function CallsTable({ calls }: { calls: CallRow[] }) {
                 <NotesCell notes={call.notes} />
               </td>
               <td className="px-4 py-3 text-right">
-                <ActionsCell call={call} />
+                <ActionsCell
+                  call={call}
+                  resolved={resolvedByCallId[call.callId] ?? call.resolved}
+                  onToggleResolved={handleToggleResolved}
+                />
               </td>
             </tr>
           ))}

@@ -37,6 +37,7 @@ export default async function DashboardPage() {
       transcript: true,
       severity: true,
       sentimentScore: true,
+      resolved: true,
       notes: true,
       recordingURL: true,
     },
@@ -52,6 +53,7 @@ export default async function DashboardPage() {
     transcript: String(c.transcript ?? ""),
     severity: c.severity,
     sentimentScore: c.sentimentScore,
+    resolved: c.resolved,
     notes: (c.notes as { note: string; reason: string }[] | null) ?? [],
     recordingURL: c.recordingURL,
   }))

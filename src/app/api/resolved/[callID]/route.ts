@@ -3,13 +3,13 @@ import { prisma } from "@/lib/prisma";
 
 export async function PATCH(
   req: NextRequest,
-  { params }: { params: { callId: string } }
+  { params }: { params: { callID: string } },
 ) {
   try {
     const { resolved } = await req.json();
 
     const updated = await prisma.inboundCall.update({
-      where: { callId: params.callId },
+      where: { callId: params.callID },
       data: { resolved },
     });
 
@@ -18,7 +18,7 @@ export async function PATCH(
     console.error(err);
     return NextResponse.json(
       { error: "Failed to update resolved status" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
