@@ -4,14 +4,16 @@ import { openai } from '@ai-sdk/openai';
 
 export async function transcriptSummary(transcript: string) {
   try {
+
+    console.log(transcript);
     const { output } = await generateText({
-      model: openai('gpt-4o-mini'),
+      model: openai('gpt-4.1'),
       output: Output.object({
         schema: z.object({
           notes: z.array(
             z.object({
-              note: z.string().min(1).max(100),
-              reason: z.string().min(1).max(100),
+              note: z.string(),
+              reason: z.string(),
             }),
           ),
           severity: z.number().int().min(1).max(10),
@@ -27,6 +29,8 @@ Output rules:
 - Each reason should state why that theme matters for safety, follow-up, or supervision—not a duplicate of the note text.
 
 Severity (1–10): reflect imminent risk, hopelessness, access to means, substance use, isolation, and similar factors consistent with crisis-line assessment.
+
+Make the notes and reason short and concise.
 
 Transcript:
 ${transcript}
