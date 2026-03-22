@@ -62,14 +62,30 @@ function sentimentClass(score: number): string {
 }
 
 function NotesCell({ notes }: { notes: Note[] }) {
-  const [pos, setPos] = React.useState<{ top: number; left: number } | null>(null)
+  const [pos, setPos] = React.useState<{ top: number; left: number; placeAbove: boolean } | null>(null)
   const triggerRef = React.useRef<HTMLSpanElement>(null)
   const timeoutRef = React.useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const handleEnter = () => {
     if (timeoutRef.current) clearTimeout(timeoutRef.current)
     const rect = triggerRef.current?.getBoundingClientRect()
-    if (rect) setPos({ top: rect.bottom + 6, left: rect.left })
+    if (!rect) return
+
+    const tooltipWidth = 288 // w-72
+    const tooltipHeightEstimate = 220
+    const margin = 8
+
+    const maxLeft = window.innerWidth - tooltipWidth - margin
+    const preferredLeft = rect.left - 120
+    const clampedLeft = Math.max(margin, Math.min(preferredLeft, maxLeft))
+
+    const placeAbove = rect.bottom + 6 + tooltipHeightEstimate > window.innerHeight - margin
+
+    setPos({
+      top: placeAbove ? rect.top - 6 : rect.bottom + 6,
+      left: clampedLeft,
+      placeAbove,
+    })
   }
 
   const handleLeave = () => {
@@ -98,8 +114,14 @@ function NotesCell({ notes }: { notes: Note[] }) {
       </span>
       {pos && (
         <div
-          style={{ position: "fixed", top: pos.top, left: pos.left, zIndex: 9999 }}
-          className="w-72 rounded-sm border border-border bg-popover p-3 shadow-lg text-sm text-popover-foreground"
+          style={{
+            position: "fixed",
+            top: pos.top,
+            left: pos.left,
+            transform: pos.placeAbove ? "translateY(-100%)" : undefined,
+            zIndex: 9999,
+          }}
+          className="w-72 max-h-56 overflow-auto rounded-sm border border-border bg-popover p-3 shadow-lg text-sm text-popover-foreground [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
           onMouseEnter={() => { if (timeoutRef.current) clearTimeout(timeoutRef.current) }}
           onMouseLeave={handleLeave}
         >
@@ -167,7 +189,9 @@ function ActionsCell({
         </DropdownMenuItem>
         <DropdownMenuItem
           className="cursor-pointer"
-          onClick={() => onToggleResolved(call.callId, !resolved)}
+          onSelect={() => {
+            onToggleResolved(call.callId, !resolved)
+          }}
         >
           {resolved ? "Mark unresolved" : "Resolve"}
         </DropdownMenuItem>
@@ -190,6 +214,7 @@ type SortKey = "startTime" | "endTime" | "fromNumber" | "duration" | "severity" 
 type SortDir = "asc" | "desc"
 type TimeFilter = "all" | "past24h" | "past7d" | "past30d"
 type SeverityFilter = "all" | "low" | "medium" | "high"
+type ResolvedFilter = "unresolved" | "resolved" | "all"
 
 const TIME_FILTER_LABEL: Record<TimeFilter, string> = {
   all: "All time",
@@ -203,6 +228,12 @@ const SEVERITY_FILTER_LABEL: Record<SeverityFilter, string> = {
   low: "Low (1-3)",
   medium: "Medium (4-5)",
   high: "High (6-10)",
+}
+
+const RESOLVED_FILTER_LABEL: Record<ResolvedFilter, string> = {
+  unresolved: "Unresolved",
+  resolved: "Resolved",
+  all: "All",
 }
 
 function sortCalls(calls: CallRow[], key: SortKey, dir: SortDir): CallRow[] {
@@ -344,6 +375,7 @@ export function CallsTable({ calls }: { calls: CallRow[] }) {
   const [query, setQuery] = React.useState("")
   const [timeFilter, setTimeFilter] = React.useState<TimeFilter>("all")
   const [severityFilter, setSeverityFilter] = React.useState<SeverityFilter>("all")
+  const [resolvedFilter, setResolvedFilter] = React.useState<ResolvedFilter>("unresolved")
   const [resolvedByCallId, setResolvedByCallId] = React.useState<Record<string, boolean>>({})
 
   const handleToggleResolved = React.useCallback(
@@ -382,6 +414,11 @@ export function CallsTable({ calls }: { calls: CallRow[] }) {
     const now = Date.now()
 
     return calls.filter((c) => {
+      const effectiveResolved = resolvedByCallId[c.callId] ?? c.resolved
+
+      if (resolvedFilter === "resolved" && !effectiveResolved) return false
+      if (resolvedFilter === "unresolved" && effectiveResolved) return false
+
       if (timeFilter !== "all") {
         const msAgo = now - c.startTime
         if (timeFilter === "past24h" && msAgo > 24 * 60 * 60 * 1000) return false
@@ -400,7 +437,7 @@ export function CallsTable({ calls }: { calls: CallRow[] }) {
       if (c.notes.some((n) => n.note.toLowerCase().includes(q) || n.reason.toLowerCase().includes(q))) return true
       return false
     })
-  }, [calls, query, timeFilter, severityFilter])
+  }, [calls, query, timeFilter, severityFilter, resolvedFilter, resolvedByCallId])
 
   const sorted = sortCalls(filtered, sortKey, sortDir)
 
@@ -417,7 +454,7 @@ export function CallsTable({ calls }: { calls: CallRow[] }) {
 
   return (
     <div className="flex flex-col gap-3">
-      <div className="grid gap-2 rounded-sm border border-border bg-muted/20 p-2 sm:grid-cols-[minmax(0,1fr)_12rem_12rem] sm:items-end">
+      <div className="grid gap-2 rounded-sm border border-border bg-muted/20 p-2 sm:grid-cols-[minmax(0,1fr)_10rem_10rem_10rem] sm:items-end">
         <div className="relative">
           <svg
             className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground"
@@ -468,6 +505,17 @@ export function CallsTable({ calls }: { calls: CallRow[] }) {
             { value: "low", label: SEVERITY_FILTER_LABEL.low },
             { value: "medium", label: SEVERITY_FILTER_LABEL.medium },
             { value: "high", label: SEVERITY_FILTER_LABEL.high },
+          ]}
+        />
+
+        <FilterDropdown
+          label="Status"
+          value={resolvedFilter}
+          onChange={setResolvedFilter}
+          options={[
+            { value: "unresolved", label: RESOLVED_FILTER_LABEL.unresolved },
+            { value: "resolved", label: RESOLVED_FILTER_LABEL.resolved },
+            { value: "all", label: RESOLVED_FILTER_LABEL.all },
           ]}
         />
       </div>
