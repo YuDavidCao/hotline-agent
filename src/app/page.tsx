@@ -7,15 +7,13 @@ export default function Home() {
       <div className="flex-1 flex flex-col items-center justify-center px-6 py-16 sm:py-24">
         <div className="max-w-lg w-full text-center">
           <p className="text-link font-semibold tracking-[0.2em] text-xs uppercase mb-4">
-            Human–LLM phone analysis
+            Human–LLM signal processing and data analysis
           </p>
           <h1 className="text-3xl sm:text-4xl font-semibold text-foreground tracking-tight text-balance">
-            Transcripts for phone calls between people and LLMs
+            HoosThere?
           </h1>
           <p className="mt-4 text-muted-foreground text-[15px] leading-relaxed">
-            Route inbound calls through an LLM-based agent, then review and analyze what
-            was said on both sides—built for conversation research and product QA, not
-            for patient care workflows.
+          Route inbound helpline calls through an LLM-powered agent, then analyze conversations to improve response quality and agent performance.
           </p>
 
           <div className="mt-10 flex flex-col sm:flex-row gap-3 justify-center">
@@ -40,22 +38,20 @@ export default function Home() {
           <div>
             <p className="font-medium text-foreground mb-1">Structured data</p>
             <p className="text-sm leading-relaxed">
-              PostgreSQL via Prisma for reliable session and user records.
+            Structured conversation data enables operators to quickly access call history, track active sessions, and maintain context across high call volumes.
             </p>
           </div>
           <div>
             <p className="font-medium text-foreground mb-1">Conversation-first</p>
             <p className="text-sm leading-relaxed">
-              Transcript layout tuned for reviewing human and LLM turns on calls.
-            </p>
+            Real-time audio is processed on the client into structured text, enabling intuitive visualization and analysis of human and LLM conversation flows.            </p>
           </div>
         </div>
         <div className="max-w-3xl mx-auto px-6 pb-8">
           <p className="text-xs text-muted-foreground text-center leading-relaxed border-t border-border pt-6">
             <strong className="font-medium text-foreground">Not for HIPAA-covered healthcare.</strong>{" "}
-            Hotline Agent is not intended for healthcare providers, PHI, or use as a
-            HIPAA-compliant service. It is for analyzing phone conversations between
-            humans and LLMs outside regulated medical contexts.
+            'HoosThere?' is not intended for healthcare providers, or use as a
+            HIPAA-compliant service.
           </p>
         </div>
       </footer>
