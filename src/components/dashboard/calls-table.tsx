@@ -27,6 +27,7 @@ export interface CallRow {
   transcript: string
   severity: number
   sentimentScore: number
+  resolved: boolean
   notes: Note[]
   recordingURL: string
 }
@@ -35,7 +36,6 @@ function formatDateTime(ts: number): string {
   return new Date(ts).toLocaleString(undefined, {
     month: "short",
     day: "numeric",
-    year: "numeric",
     hour: "2-digit",
     minute: "2-digit",
   })
@@ -47,12 +47,6 @@ function formatDuration(ms: number): string {
   const seconds = totalSeconds % 60
   if (minutes === 0) return `${seconds}s`
   return `${minutes}m ${seconds}s`
-}
-
-function transcriptPreview(transcript: string): string {
-  const trimmed = transcript.trim()
-  if (trimmed.length <= 50) return trimmed
-  return trimmed.slice(0, 50) + "..."
 }
 
 function severityClass(severity: number): string {
@@ -68,14 +62,30 @@ function sentimentClass(score: number): string {
 }
 
 function NotesCell({ notes }: { notes: Note[] }) {
-  const [pos, setPos] = React.useState<{ top: number; left: number } | null>(null)
+  const [pos, setPos] = React.useState<{ top: number; left: number; placeAbove: boolean } | null>(null)
   const triggerRef = React.useRef<HTMLSpanElement>(null)
   const timeoutRef = React.useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const handleEnter = () => {
     if (timeoutRef.current) clearTimeout(timeoutRef.current)
     const rect = triggerRef.current?.getBoundingClientRect()
-    if (rect) setPos({ top: rect.bottom + 6, left: rect.left })
+    if (!rect) return
+
+    const tooltipWidth = 288 // w-72
+    const tooltipHeightEstimate = 220
+    const margin = 8
+
+    const maxLeft = window.innerWidth - tooltipWidth - margin
+    const preferredLeft = rect.left - 120
+    const clampedLeft = Math.max(margin, Math.min(preferredLeft, maxLeft))
+
+    const placeAbove = rect.bottom + 6 + tooltipHeightEstimate > window.innerHeight - margin
+
+    setPos({
+      top: placeAbove ? rect.top - 6 : rect.bottom + 6,
+      left: clampedLeft,
+      placeAbove,
+    })
   }
 
   const handleLeave = () => {
@@ -104,8 +114,14 @@ function NotesCell({ notes }: { notes: Note[] }) {
       </span>
       {pos && (
         <div
-          style={{ position: "fixed", top: pos.top, left: pos.left, zIndex: 9999 }}
-          className="w-72 rounded-sm border border-border bg-popover p-3 shadow-lg text-sm text-popover-foreground"
+          style={{
+            position: "fixed",
+            top: pos.top,
+            left: pos.left,
+            transform: pos.placeAbove ? "translateY(-100%)" : undefined,
+            zIndex: 9999,
+          }}
+          className="w-72 max-h-56 overflow-auto rounded-sm border border-border bg-popover p-3 shadow-lg text-sm text-popover-foreground [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
           onMouseEnter={() => { if (timeoutRef.current) clearTimeout(timeoutRef.current) }}
           onMouseLeave={handleLeave}
         >
@@ -123,7 +139,15 @@ function NotesCell({ notes }: { notes: Note[] }) {
   )
 }
 
-function ActionsCell({ call }: { call: CallRow }) {
+function ActionsCell({
+  call,
+  resolved,
+  onToggleResolved,
+}: {
+  call: CallRow
+  resolved: boolean
+  onToggleResolved: (callId: string, nextResolved: boolean) => Promise<void>
+}) {
   const router = useRouter()
   return (
     <DropdownMenu>
@@ -131,20 +155,20 @@ function ActionsCell({ call }: { call: CallRow }) {
         <button
           type="button"
           className={cn(
-            "inline-flex h-7 items-center gap-1 rounded-sm border border-border bg-background px-2.5 text-xs font-medium outline-none transition-colors",
+            "inline-flex h-7 w-7 items-center justify-center rounded-sm border border-border bg-background text-xs font-medium outline-none transition-colors",
             "hover:bg-accent hover:text-accent-foreground",
             "focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1"
           )}
+          aria-label="Call actions"
         >
-          Actions
           <svg
-            className="h-3 w-3 shrink-0"
+            className="h-3.5 w-3.5 shrink-0"
             viewBox="0 0 16 16"
             fill="none"
             stroke="currentColor"
-            strokeWidth="2"
+            strokeWidth="1.8"
           >
-            <path d="M4 6l4 4 4-4" strokeLinecap="round" strokeLinejoin="round" />
+            <path d="M2.5 4h11M2.5 8h11M2.5 12h11" strokeLinecap="round" />
           </svg>
         </button>
       </DropdownMenuTrigger>
@@ -156,12 +180,20 @@ function ActionsCell({ call }: { call: CallRow }) {
           View call
         </DropdownMenuItem>
         <DropdownMenuItem
-          className="cursor-pointer"
-          onClick={() => {
-            // placeholder: track this number
+          onClick={async () => {
+            const encodedNumber = encodeURIComponent(call.fromNumber)
+            router.push(`/history/${encodedNumber}`)
           }}
         >
           Track this number
+        </DropdownMenuItem>
+        <DropdownMenuItem
+          className="cursor-pointer"
+          onSelect={() => {
+            onToggleResolved(call.callId, !resolved)
+          }}
+        >
+          {resolved ? "Mark unresolved" : "Resolve"}
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem
@@ -180,6 +212,29 @@ function ActionsCell({ call }: { call: CallRow }) {
 
 type SortKey = "startTime" | "endTime" | "fromNumber" | "duration" | "severity" | "sentimentScore"
 type SortDir = "asc" | "desc"
+type TimeFilter = "all" | "past24h" | "past7d" | "past30d"
+type SeverityFilter = "all" | "low" | "medium" | "high"
+type ResolvedFilter = "unresolved" | "resolved" | "all"
+
+const TIME_FILTER_LABEL: Record<TimeFilter, string> = {
+  all: "All time",
+  past24h: "Past 24 hours",
+  past7d: "Past week",
+  past30d: "Past month",
+}
+
+const SEVERITY_FILTER_LABEL: Record<SeverityFilter, string> = {
+  all: "All severity",
+  low: "Low (1-3)",
+  medium: "Medium (4-5)",
+  high: "High (6-10)",
+}
+
+const RESOLVED_FILTER_LABEL: Record<ResolvedFilter, string> = {
+  unresolved: "Unresolved",
+  resolved: "Resolved",
+  all: "All",
+}
 
 function sortCalls(calls: CallRow[], key: SortKey, dir: SortDir): CallRow[] {
   return [...calls].sort((a, b) => {
@@ -247,10 +302,103 @@ function SortTh({
   )
 }
 
+function FilterDropdown<T extends string>({
+  label,
+  value,
+  options,
+  onChange,
+}: {
+  label: string
+  value: T
+  options: { value: T; label: string }[]
+  onChange: (value: T) => void
+}) {
+  const selectedLabel = options.find((option) => option.value === value)?.label ?? ""
+
+  return (
+    <div className="flex flex-col gap-1">
+      <span className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
+        {label}
+      </span>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <button
+            type="button"
+            className={cn(
+              "inline-flex h-9 w-full items-center justify-between rounded-sm border border-border bg-input/30 px-3 text-sm text-foreground outline-none transition-colors",
+              "hover:bg-input/50",
+              "focus-visible:ring-2 focus-visible:ring-ring"
+            )}
+          >
+            <span className="truncate">{selectedLabel}</span>
+            <svg
+              className="ml-2 h-3.5 w-3.5 shrink-0 text-muted-foreground"
+              viewBox="0 0 16 16"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+            >
+              <path d="M4 6l4 4 4-4" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="start" className="min-w-[12rem]">
+          {options.map((option) => (
+            <DropdownMenuItem
+              key={option.value}
+              className="cursor-pointer flex items-center justify-between"
+              onClick={() => onChange(option.value)}
+            >
+              <span>{option.label}</span>
+              {value === option.value ? (
+                <svg
+                  className="h-3.5 w-3.5 text-foreground"
+                  viewBox="0 0 16 16"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                >
+                  <path d="M3.5 8.5l2.5 2.5 6-6" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              ) : null}
+            </DropdownMenuItem>
+          ))}
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </div>
+  )
+}
+
 export function CallsTable({ calls }: { calls: CallRow[] }) {
   const [sortKey, setSortKey] = React.useState<SortKey>("startTime")
   const [sortDir, setSortDir] = React.useState<SortDir>("desc")
   const [query, setQuery] = React.useState("")
+  const [timeFilter, setTimeFilter] = React.useState<TimeFilter>("all")
+  const [severityFilter, setSeverityFilter] = React.useState<SeverityFilter>("all")
+  const [resolvedFilter, setResolvedFilter] = React.useState<ResolvedFilter>("unresolved")
+  const [resolvedByCallId, setResolvedByCallId] = React.useState<Record<string, boolean>>({})
+
+  const handleToggleResolved = React.useCallback(
+    async (callId: string, nextResolved: boolean) => {
+      setResolvedByCallId((prev) => ({ ...prev, [callId]: nextResolved }))
+
+      try {
+        const res = await fetch(`/api/resolved/${encodeURIComponent(callId)}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ resolved: nextResolved }),
+        })
+
+        if (!res.ok) {
+          throw new Error("Failed to update resolved state")
+        }
+      } catch (error) {
+        setResolvedByCallId((prev) => ({ ...prev, [callId]: !nextResolved }))
+        console.error(error)
+      }
+    },
+    [],
+  )
 
   const handleSort = (key: SortKey) => {
     if (key === sortKey) {
@@ -263,14 +411,33 @@ export function CallsTable({ calls }: { calls: CallRow[] }) {
 
   const filtered = React.useMemo(() => {
     const q = query.trim().toLowerCase()
-    if (!q) return calls
+    const now = Date.now()
+
     return calls.filter((c) => {
+      const effectiveResolved = resolvedByCallId[c.callId] ?? c.resolved
+
+      if (resolvedFilter === "resolved" && !effectiveResolved) return false
+      if (resolvedFilter === "unresolved" && effectiveResolved) return false
+
+      if (timeFilter !== "all") {
+        const msAgo = now - c.startTime
+        if (timeFilter === "past24h" && msAgo > 24 * 60 * 60 * 1000) return false
+        if (timeFilter === "past7d" && msAgo > 7 * 24 * 60 * 60 * 1000) return false
+        if (timeFilter === "past30d" && msAgo > 30 * 24 * 60 * 60 * 1000) return false
+      }
+
+      if (severityFilter !== "all") {
+        if (severityFilter === "low" && !(c.severity <= 3)) return false
+        if (severityFilter === "medium" && !(c.severity > 3 && c.severity < 6)) return false
+        if (severityFilter === "high" && !(c.severity >= 6)) return false
+      }
+
+      if (!q) return true
       if (c.fromNumber.toLowerCase().includes(q)) return true
-      if (c.transcript.toLowerCase().includes(q)) return true
       if (c.notes.some((n) => n.note.toLowerCase().includes(q) || n.reason.toLowerCase().includes(q))) return true
       return false
     })
-  }, [calls, query])
+  }, [calls, query, timeFilter, severityFilter, resolvedFilter, resolvedByCallId])
 
   const sorted = sortCalls(filtered, sortKey, sortDir)
 
@@ -287,45 +454,79 @@ export function CallsTable({ calls }: { calls: CallRow[] }) {
 
   return (
     <div className="flex flex-col gap-3">
-      <div className="relative">
-        <svg
-          className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground"
-          viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.8"
-        >
-          <circle cx="6.5" cy="6.5" r="4" />
-          <path d="M10 10l3 3" strokeLinecap="round" />
-        </svg>
-        <InputBase
-          type="text"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          placeholder="Search by phone number, transcript, or notes…"
-          className="pl-9 pr-8"
-        />
-        {query && (
-          <button
-            type="button"
-            onClick={() => setQuery("")}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
-            aria-label="Clear search"
+      <div className="grid gap-2 rounded-sm border border-border bg-muted/20 p-2 sm:grid-cols-[minmax(0,1fr)_10rem_10rem_10rem] sm:items-end">
+        <div className="relative">
+          <svg
+            className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground"
+            viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.8"
           >
-            <svg className="h-3.5 w-3.5" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M3 3l10 10M13 3L3 13" strokeLinecap="round" />
-            </svg>
-          </button>
-        )}
+            <circle cx="6.5" cy="6.5" r="4" />
+            <path d="M10 10l3 3" strokeLinecap="round" />
+          </svg>
+          <InputBase
+            type="text"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Search by phone number or notes…"
+            className="pl-9 pr-8"
+          />
+          {query && (
+            <button
+              type="button"
+              onClick={() => setQuery("")}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+              aria-label="Clear search"
+            >
+              <svg className="h-3.5 w-3.5" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M3 3l10 10M13 3L3 13" strokeLinecap="round" />
+              </svg>
+            </button>
+          )}
+        </div>
+
+        <FilterDropdown
+          label="Timeframe"
+          value={timeFilter}
+          onChange={setTimeFilter}
+          options={[
+            { value: "all", label: TIME_FILTER_LABEL.all },
+            { value: "past24h", label: TIME_FILTER_LABEL.past24h },
+            { value: "past7d", label: TIME_FILTER_LABEL.past7d },
+            { value: "past30d", label: TIME_FILTER_LABEL.past30d },
+          ]}
+        />
+
+        <FilterDropdown
+          label="Severity"
+          value={severityFilter}
+          onChange={setSeverityFilter}
+          options={[
+            { value: "all", label: SEVERITY_FILTER_LABEL.all },
+            { value: "low", label: SEVERITY_FILTER_LABEL.low },
+            { value: "medium", label: SEVERITY_FILTER_LABEL.medium },
+            { value: "high", label: SEVERITY_FILTER_LABEL.high },
+          ]}
+        />
+
+        <FilterDropdown
+          label="Status"
+          value={resolvedFilter}
+          onChange={setResolvedFilter}
+          options={[
+            { value: "unresolved", label: RESOLVED_FILTER_LABEL.unresolved },
+            { value: "resolved", label: RESOLVED_FILTER_LABEL.resolved },
+            { value: "all", label: RESOLVED_FILTER_LABEL.all },
+          ]}
+        />
       </div>
       <div className="overflow-x-auto">
-      <table className="w-full min-w-[900px] text-sm border-collapse">
+      <table className="w-full min-w-[760px] text-sm border-collapse">
         <thead>
           <tr className="border-b border-border bg-muted/40">
             <SortTh label="Start" sortKey="startTime" current={sortKey} dir={sortDir} onSort={handleSort} className="whitespace-nowrap" />
             <SortTh label="End" sortKey="endTime" current={sortKey} dir={sortDir} onSort={handleSort} className="whitespace-nowrap" />
             <SortTh label="From" sortKey="fromNumber" current={sortKey} dir={sortDir} onSort={handleSort} className="whitespace-nowrap" />
             <SortTh label="Duration" sortKey="duration" current={sortKey} dir={sortDir} onSort={handleSort} className="whitespace-nowrap" />
-            <th className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-              Transcript
-            </th>
             <SortTh label="Severity" sortKey="severity" current={sortKey} dir={sortDir} onSort={handleSort} className="whitespace-nowrap" />
             <SortTh label="Sentiment" sortKey="sentimentScore" current={sortKey} dir={sortDir} onSort={handleSort} className="whitespace-nowrap" />
             <th className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
@@ -358,9 +559,6 @@ export function CallsTable({ calls }: { calls: CallRow[] }) {
               <td className="px-4 py-3 whitespace-nowrap text-foreground">
                 {formatDuration(call.duration)}
               </td>
-              <td className="px-4 py-3 max-w-[220px] text-muted-foreground">
-                {transcriptPreview(call.transcript)}
-              </td>
               <td className="px-4 py-3 whitespace-nowrap">
                 <span
                   className={cn(
@@ -386,7 +584,11 @@ export function CallsTable({ calls }: { calls: CallRow[] }) {
                 <NotesCell notes={call.notes} />
               </td>
               <td className="px-4 py-3 text-right">
-                <ActionsCell call={call} />
+                <ActionsCell
+                  call={call}
+                  resolved={resolvedByCallId[call.callId] ?? call.resolved}
+                  onToggleResolved={handleToggleResolved}
+                />
               </td>
             </tr>
           ))}
@@ -394,7 +596,7 @@ export function CallsTable({ calls }: { calls: CallRow[] }) {
       </table>
       {sorted.length === 0 && (
         <div className="py-12 text-center text-sm text-muted-foreground">
-          No calls match <span className="font-medium text-foreground">&ldquo;{query}&rdquo;</span>.
+          No calls match the current filters.
         </div>
       )}
     </div>

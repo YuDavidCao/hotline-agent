@@ -21,6 +21,7 @@ export interface MyCallData {
     reason: string;
   }[];
   severity: number;
+  resolved: boolean; 
   sentimentScore: number;
   [key: string]: unknown;
 }
