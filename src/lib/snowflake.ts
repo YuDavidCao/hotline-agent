@@ -1,16 +1,50 @@
+import path from "node:path"
 import snowflake from "snowflake-sdk"
 
 snowflake.configure({ logLevel: "WARN" })
 
-function getConnection(): Promise<snowflake.Connection> {
-  const conn = snowflake.createConnection({
+function getConnectionOptions(): snowflake.ConnectionOptions {
+  const base = {
     account: process.env.SNOWFLAKE_ACCOUNT!,
     username: process.env.SNOWFLAKE_USERNAME!,
-    password: process.env.SNOWFLAKE_PASSWORD!,
     database: process.env.SNOWFLAKE_DATABASE!,
     schema: process.env.SNOWFLAKE_SCHEMA!,
     warehouse: process.env.SNOWFLAKE_WAREHOUSE!,
-  })
+  }
+
+  // Key-pair auth (bypasses MFA) — use when account requires MFA
+  const privateKeyPath = process.env.SNOWFLAKE_PRIVATE_KEY_PATH
+  const privateKeyRaw = process.env.SNOWFLAKE_PRIVATE_KEY
+
+  if (privateKeyPath || privateKeyRaw) {
+    if (privateKeyPath) {
+      const resolved = path.resolve(process.cwd(), privateKeyPath)
+      return {
+        ...base,
+        authenticator: "SNOWFLAKE_JWT" as const,
+        privateKeyPath: resolved,
+      }
+    }
+    if (privateKeyRaw) {
+      // PEM as env var (replace escaped newlines with real newlines)
+      const privateKey = privateKeyRaw.replace(/\\n/g, "\n")
+      return {
+        ...base,
+        authenticator: "SNOWFLAKE_JWT" as const,
+        privateKey,
+      }
+    }
+  }
+
+  // Password auth (fails if account requires MFA)
+  return {
+    ...base,
+    password: process.env.SNOWFLAKE_PASSWORD!,
+  }
+}
+
+function getConnection(): Promise<snowflake.Connection> {
+  const conn = snowflake.createConnection(getConnectionOptions())
 
   return new Promise((resolve, reject) => {
     conn.connect((err) => {
