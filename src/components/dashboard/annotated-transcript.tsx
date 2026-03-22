@@ -147,9 +147,14 @@ function getActiveCharRange(
   for (const cap of turnCaps) {
     const capWordCount = cap.text.split(/\s+/).filter(Boolean).length
 
-    if (currentTime >= cap.start) {
+    // Only highlight while playback is inside this caption's time window.
+    // Using start-only matching left the last caption of each turn stuck
+    // highlighted after audio had passed it (every later cap still matched
+    // currentTime >= cap.start).
+    if (currentTime >= cap.start && currentTime < cap.end) {
       activeStartWord = wordOffset
       activeEndWord = wordOffset + capWordCount
+      break
     }
 
     wordOffset += capWordCount
