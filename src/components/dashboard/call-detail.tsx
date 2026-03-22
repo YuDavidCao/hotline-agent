@@ -110,6 +110,7 @@ function AudioPlayer({
   onTimeUpdate?: (time: number, captions: TimedCaption[]) => void
 }) {
   const audioRef = React.useRef<HTMLAudioElement>(null)
+  const pendingSeekRef = React.useRef<number | null>(null)
   const [playing, setPlaying] = React.useState(false)
   const [currentTime, setCurrentTime] = React.useState(0)
   const [duration, setDuration] = React.useState(0)
@@ -178,6 +179,10 @@ function AudioPlayer({
     if (playing) {
       audio.pause()
     } else {
+      if (pendingSeekRef.current !== null) {
+        audio.currentTime = pendingSeekRef.current
+        pendingSeekRef.current = null
+      }
       audio.play()
     }
     setPlaying(!playing)
@@ -186,7 +191,9 @@ function AudioPlayer({
   const seek = (time: number) => {
     const audio = audioRef.current
     if (!audio) return
+    pendingSeekRef.current = time
     audio.currentTime = time
+    setCurrentTime(time)
   }
 
   const seekBar = (e: React.MouseEvent<HTMLDivElement>) => {
