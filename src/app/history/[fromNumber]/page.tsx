@@ -2,6 +2,7 @@
 
 import { useParams, useRouter } from 'next/navigation'
 import { useEffect, useMemo, useState } from 'react'
+import { useSession } from 'next-auth/react'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { AppNavbar } from '@/components/layout/app-navbar'
@@ -151,6 +152,7 @@ function buildCallerInsights(calls: CallHistoryItem[]) {
 
 export default function CallHistoryPage() {
   const router = useRouter()
+  const { data: session } = useSession()
   const params = useParams()
   const fromNumberParam = params.fromNumber
   const normalizedNumber = Array.isArray(fromNumberParam)
@@ -173,6 +175,7 @@ export default function CallHistoryPage() {
   )
 
   const insights = useMemo(() => buildCallerInsights(callHistory), [callHistory])
+  const userLabel = session?.user?.name ?? session?.user?.email ?? null
 
   useEffect(() => {
     if (!number) return
@@ -189,7 +192,12 @@ export default function CallHistoryPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <AppNavbar subtitle="History by phone number" showDashboardButton showSignOutButton />
+      <AppNavbar
+        subtitle="History by phone number"
+        username={userLabel}
+        showDashboardButton
+        showSignOutButton
+      />
 
       <main className="px-3 py-4 sm:px-5 sm:py-6 lg:px-6 lg:py-8">
         <div className="mx-auto w-full max-w-[min(100rem,calc(100vw-1.5rem))] space-y-4">
@@ -336,15 +344,7 @@ export default function CallHistoryPage() {
                           )}
                         </p>
                       </div>
-                      <div className="flex shrink-0 flex-wrap items-center justify-end gap-2 sm:gap-3">
-                        <div className="flex min-w-[5rem] flex-col items-end gap-1 text-xs">
-                          <p className="text-muted-foreground tabular-nums">{formatDuration(call.durationMs)}</p>
-                          <p
-                            className={`inline-flex rounded-sm border px-2 py-0.5 font-medium ${severityClass(call.severity)}`}
-                          >
-                            Severity {call.severity}
-                          </p>
-                        </div>
+                      <div className="flex w-full flex-col items-start gap-1.5 text-xs sm:w-auto sm:items-end">
                         <Button
                           type="button"
                           variant="outline"
@@ -353,6 +353,16 @@ export default function CallHistoryPage() {
                         >
                           View call
                         </Button>
+                        <div className="grid grid-cols-[5.5rem_auto] items-center gap-x-2">
+                          <p className="text-muted-foreground tabular-nums sm:text-right">
+                            {formatDuration(call.durationMs)}
+                          </p>
+                          <p
+                            className={`inline-flex justify-center rounded-sm border px-1.5 py-px text-[10px] font-medium leading-none ${severityClass(call.severity)}`}
+                          >
+                            Sev {call.severity}
+                          </p>
+                        </div>
                       </div>
                     </div>
 

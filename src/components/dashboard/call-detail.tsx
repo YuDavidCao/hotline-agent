@@ -4,7 +4,7 @@ import * as React from "react"
 import { useRouter } from "next/navigation"
 import { cn } from "@/lib/utils"
 import { Card } from "@/components/ui/card"
-import { Separator } from "@/components/ui/separator"
+import { ScrollArea } from "@/components/ui/scroll-area"
 import { CallTranscriptView } from "./call-transcript-view"
 import { AudioWaveform } from "./audio-waveform"
 import { detectSpeechSegments, type SpeechSegment } from "@/lib/energy-detection"
@@ -301,7 +301,7 @@ function toEntry(call: FullCall): DashboardCallEntry {
     callId: call.callId,
     listLabel: call.callId,
     severity: numericToCallSeverity(call.severity),
-    severityScore: call.severity * 10,
+    severityScore: call.severity,
     startTimestamp: call.startTime,
     endTimestamp: call.endTime,
     durationMs: call.duration,
@@ -348,28 +348,25 @@ export function CallDetail({ call }: { call: FullCall }) {
 
       <div className="flex flex-col gap-4">
         {/* Notes */}
-        <Card className="overflow-hidden p-0">
+        <Card className="h-fit overflow-hidden p-0 lg:sticky lg:top-4">
           <div className="border-b border-border bg-muted/40 px-5 py-3">
             <h2 className="text-[15px] font-semibold text-foreground">Notes</h2>
             <p className="mt-0.5 text-xs text-muted-foreground">AI-extracted from transcript</p>
           </div>
-          <div className="p-5">
+          <ScrollArea className="h-[28rem] p-3">
             {call.notes.length === 0 ? (
-              <p className="text-sm text-muted-foreground">No notes.</p>
+              <p className="text-sm text-muted-foreground">No notes for this call.</p>
             ) : (
-              <ul className="space-y-3">
+              <ul className="space-y-2">
                 {call.notes.map((n, i) => (
-                  <React.Fragment key={i}>
-                    {i > 0 && <Separator />}
-                    <li className="pt-1 first:pt-0">
-                      <p className="text-sm font-medium text-foreground leading-snug">{n.note}</p>
-                      <p className="mt-0.5 text-xs text-muted-foreground leading-relaxed">{n.reason}</p>
-                    </li>
-                  </React.Fragment>
+                  <li key={i} className="rounded-sm border border-border bg-muted/40 p-2">
+                    <p className="text-sm font-medium leading-snug text-foreground">{n.note}</p>
+                    <p className="mt-0.5 text-xs leading-relaxed text-muted-foreground">{n.reason}</p>
+                  </li>
                 ))}
               </ul>
             )}
-          </div>
+          </ScrollArea>
         </Card>
       </div>
     </div>

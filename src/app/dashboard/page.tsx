@@ -129,7 +129,7 @@ export default async function DashboardPage() {
               <p className="text-xs text-muted-foreground">Severity categories</p>
               <ul className="mt-2 space-y-1.5 text-sm">
                 <li className="flex items-center justify-between gap-2">
-                  <span className="text-green-500">Low (1-3)</span>
+                  <span className="text-emerald-600 dark:text-emerald-500">Low (1-3)</span>
                   <span className="font-semibold tabular-nums">{lowSeverityCount}</span>
                 </li>
                 <li className="flex items-center justify-between gap-2">
