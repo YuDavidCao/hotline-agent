@@ -72,4 +72,5 @@ model InboundCall {
   direction String 
   notes Json
   severity Int
+  sentimentScore Int @default(0)
 }
